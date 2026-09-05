@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12294D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2732%27 fill=%27%2312294D%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-size=%2730%27 text-anchor=%27middle%27 fill=%27%23E4C25A%27 font-family=%27Georgia%27 font-weight=%27700%27%3EA%3C/text%3E%3C/svg%3E">
+<title>Philosophers' Arcade</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --navy:#12294D; --ink:#16213A; --gold:#C9A227; --gold-2:#E4C25A; --parch:#FBF7EE; --paper:#FFFFFF;
+  --rule:#E6DCC6; --rule-2:#F1EADA; --muted:#6B6F80; --soft:#F4EFE3;
+  --ph:#2F5D8A; --eth:#B0413E; --chr:#3C7A5A;
+  --ok:#3C7A5A; --warn:#C9A227; --bad:#B0413E;
+  --t0:#F2D06B; --t1:#9FCB7A; --t2:#86B3E8; --t3:#B58BD9;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:14px; --shadow:0 10px 30px rgba(18,41,77,.10);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--parch);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(18,41,77,.045) 31px 32px);}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0}
+[hidden]{display:none!important}
+#app{max-width:920px;margin:0 auto;padding:12px 16px 56px}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:12px;padding:8px 0 14px}
+.iconbtn{border:1.5px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:999px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+.iconbtn:hover{border-color:var(--navy)}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.crest{width:42px;height:42px;border-radius:50%;background:var(--navy);display:grid;place-items:center;flex:0 0 auto}
+.crest svg{width:26px;height:26px}
+.brand b{font-family:var(--display);font-size:20px;font-weight:900;display:block;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{color:var(--muted);font-size:12.5px;letter-spacing:.02em;display:block}
+.xp{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border-radius:999px;padding:7px 13px;font-weight:700;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.xp .coin{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 3px var(--gold-2);display:inline-block}
+.xp.bump{animation:bump .4s ease}
+@keyframes bump{40%{transform:scale(1.12)}}
+.top-right{display:flex;align-items:center;gap:8px}
+
+/* ---------- screens ---------- */
+.screen{animation:fade .25s ease}
+@keyframes fade{from{opacity:.001;transform:translateY(4px)}}
+
+/* ---------- hub ---------- */
+.hero{background:var(--navy);color:#fff;border-radius:20px;padding:26px 26px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero:before{content:"";position:absolute;inset:0;background:
+  radial-gradient(circle at 88% 18%,rgba(201,162,39,.35),transparent 42%),
+  repeating-linear-gradient(0deg,transparent 0 23px,rgba(255,255,255,.06) 23px 24px);}
+.hero>*{position:relative}
+.hero .eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
+.hero h1{font-size:clamp(30px,5.4vw,46px);font-weight:900;margin:6px 0 8px;letter-spacing:-.01em}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--gold-2)}
+.hero p{max-width:60ch;color:rgba(255,255,255,.86);font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 12px}
+.stat b{font-family:var(--display);font-size:26px;font-weight:700;display:block;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:rgba(255,255,255,.7);letter-spacing:.04em;text-transform:uppercase}
+.rank{margin-top:14px}
+.rank .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden}
+.rank .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-2));border-radius:99px;transition:width .6s ease}
+.rank small{display:flex;justify-content:space-between;color:rgba(255,255,255,.75);font-size:12.5px;margin-top:6px}
+
+.section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:26px 0 12px}
+.section-h h2{font-size:22px}
+.section-h small{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:6px 13px;font-size:14px;font-weight:700;color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--navy));display:inline-block}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.chip.on i{box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+
+.games{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.game{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:18px;text-align:left;display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:start;color:var(--ink);transition:transform .15s ease,box-shadow .15s ease,border-color .15s}
+.game:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--navy)}
+.game .glyph{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--g,var(--navy));color:#fff}
+.game .glyph svg{width:40px;height:40px}
+.game h3{font-size:20px;font-weight:700}
+.game h3 small{display:block;font-family:var(--body);font-weight:700;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.game p{color:var(--muted);font-size:14px;margin-top:5px;line-height:1.4}
+.game .meta{margin-top:9px;font-size:12.5px;color:var(--navy);font-weight:700;display:flex;gap:10px;flex-wrap:wrap}
+.game .meta span{background:var(--soft);border-radius:6px;padding:2px 7px}
+
+.how{margin-top:26px;background:var(--paper);border:1.5px dashed var(--rule);border-radius:16px;padding:16px 18px;color:var(--muted);font-size:14px}
+.how b{color:var(--ink)}
+.how ol{margin:8px 0 0;padding-left:20px}
+.how li{margin:3px 0}
+.foot{margin-top:22px;color:var(--muted);font-size:12.5px;text-align:center}
+
+/* ---------- shared game chrome ---------- */
+.gbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.gbar h2{font-size:24px}
+.gbar .sub{color:var(--muted);font-size:13.5px}
+.btn{border:1.5px solid var(--navy);background:var(--navy);color:#fff;border-radius:10px;padding:9px 16px;font-weight:700;display:inline-flex;align-items:center;gap:8px;line-height:1.1}
+.btn:hover{background:#0E2040}
+.btn.ghost{background:var(--paper);color:var(--navy)}
+.btn.ghost:hover{background:var(--soft)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn.gold:hover{background:var(--gold-2)}
+.btn.sm{padding:6px 11px;font-size:14px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.panel{background:var(--paper);border:1.5px solid var(--rule);border-radius:16px;padding:16px}
+.list{display:grid;gap:8px}
+.row{display:flex;align-items:center;gap:12px;background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:12px 14px;text-align:left;color:var(--ink);width:100%}
+.row:hover{border-color:var(--navy)}
+.row .tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--c,var(--navy));border-radius:6px;padding:3px 7px;white-space:nowrap}
+.row b{flex:1;font-size:15.5px}
+.row .done{color:var(--ok);font-weight:700;font-size:14px;white-space:nowrap}
+.row .best{color:var(--muted);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hud{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hud .pill{background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hud .pill em{font-style:normal;color:var(--muted);font-weight:400;margin-right:4px}
+.hearts{letter-spacing:2px;color:var(--bad)}
+.center{text-align:center}
+.help{color:var(--muted);font-size:13.5px}
+
+/* ---------- toast + modal + confetti ---------- */
+#toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.good{background:var(--ok)} #toast.bad{background:var(--bad)} #toast.gold{background:var(--gold);color:var(--ink)}
+#modal{position:fixed;inset:0;background:rgba(18,41,77,.55);display:grid;place-items:center;z-index:50;padding:16px}
+#modal .box{background:var(--paper);border-radius:20px;padding:24px 22px;max-width:460px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,.3);animation:pop .25s ease}
+@keyframes pop{from{transform:scale(.94);opacity:0}}
+#modal h3{font-size:26px;margin-bottom:8px}
+#modal .body{color:var(--ink);font-size:15.5px}
+#modal .body .term{font-family:var(--display);font-size:30px;font-weight:900;letter-spacing:.06em;color:var(--navy);margin:6px 0 4px}
+#modal .body .why{background:var(--soft);border-left:4px solid var(--gold);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:14.5px}
+#modal .body .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin-top:10px;font-size:14px}
+#modal .body .kv span{color:var(--muted)}
+#modal .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+
+/* ---------- WORDLE ---------- */
+.w-wrap{max-width:520px;margin:0 auto}
+.w-modes{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px}
+.w-modes button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-weight:700;color:var(--muted)}
+.w-modes button.on{background:var(--navy);color:#fff}
+.clue{background:var(--paper);border:1.5px solid var(--rule);border-left:5px solid var(--gold);border-radius:12px;padding:12px 14px;margin:12px 0}
+.clue .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.clue p{font-size:16px;margin-top:3px}
+.clue .hints{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.clue .hints span{font-size:13px;color:var(--navy);font-weight:700;background:var(--soft);padding:3px 9px;border-radius:6px}
+.w-grid{display:grid;gap:6px;justify-content:center;margin:14px auto}
+.w-row{display:grid;gap:6px}
+.w-row.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.cell{aspect-ratio:1;border:2px solid var(--rule);border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:clamp(18px,4.4vw,26px);text-transform:uppercase;background:var(--paper);transition:transform .12s}
+.cell.filled{border-color:var(--navy);animation:tick .1s}
+@keyframes tick{50%{transform:scale(1.08)}}
+.cell.correct{background:var(--ok);border-color:var(--ok);color:#fff}
+.cell.present{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.cell.absent{background:#8B8F9C;border-color:#8B8F9C;color:#fff}
+.cell.flip{animation:flip .5s ease}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.kbd{display:grid;gap:6px;margin-top:10px;user-select:none}
+.kbd .krow{display:flex;gap:5px;justify-content:center}
+.key{border:0;background:#DCD5C4;border-radius:7px;min-width:30px;flex:1 1 30px;max-width:44px;height:50px;font-weight:700;font-size:15px;color:var(--ink);text-transform:uppercase;padding:0}
+.key.wide{flex:1.6 1 48px;max-width:70px;font-size:12.5px}
+.key.correct{background:var(--ok);color:#fff} .key.present{background:var(--gold)} .key.absent{background:#8B8F9C;color:#fff}
+.w-foot{display:flex;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap}
+.dist{display:grid;gap:5px;margin-top:8px}
+.dist div{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.dist i{display:block;height:18px;background:var(--navy);border-radius:4px;color:#fff;font-style:normal;font-size:12px;padding:0 6px;line-height:18px;text-align:right;min-width:22px}
+
+/* ---------- CONNECTIONS ---------- */
+.cn-wrap{max-width:560px;margin:0 auto}
+.cn-solved{display:grid;gap:8px;margin-bottom:8px}
+.cn-group{border-radius:10px;padding:10px 12px;text-align:center;animation:pop .3s ease;color:var(--ink)}
+.cn-group b{display:block;font-size:15px;text-transform:uppercase;letter-spacing:.04em}
+.cn-group span{font-size:14px}
+.cn-group small{display:block;margin-top:3px;font-size:12.5px;opacity:.85}
+.cn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{aspect-ratio:1.35;border:0;border-radius:10px;background:var(--soft);color:var(--ink);font-weight:700;font-size:14px;line-height:1.15;padding:6px 4px;display:grid;place-items:center;text-align:center;overflow:hidden;transition:transform .1s,background .1s}
+.tile.long{font-size:12.5px}.tile.xlong{font-size:11px}
+.tile:active{transform:scale(.96)}
+.tile.sel{background:var(--navy);color:#fff}
+.tile.bounce{animation:bounce .35s ease}
+@keyframes bounce{40%{transform:translateY(-6px)}}
+.cn-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap}
+.lives{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted)}
+.lives i{width:12px;height:12px;border-radius:50%;background:var(--navy);display:inline-block}
+.lives i.off{background:var(--rule)}
+.cn-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- DROP ---------- */
+.dr-wrap{max-width:560px;margin:0 auto}
+.dr-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px}
+.dr-cols div{background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;text-align:center;padding:7px 4px;border-radius:8px 8px 0 0;line-height:1.15;min-height:40px;display:grid;place-items:center}
+.dr-cols div.hit{background:var(--ok)} .dr-cols div.miss{background:var(--bad)}
+#dr-canvas{display:block;width:100%;border-radius:0 0 12px 12px;background:var(--paper);border:1.5px solid var(--rule);touch-action:none}
+.dr-ctl{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.dr-ctl button{border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;padding:12px 0;font-size:20px;font-weight:700;color:var(--navy);touch-action:manipulation}
+.dr-ctl button:active{background:var(--soft)}
+.dr-next{margin-top:8px;font-size:14px;color:var(--muted)}
+.dr-next b{color:var(--ink)}
+
+/* ---------- KNOCK-OUT ---------- */
+.ko-wrap{max-width:760px;margin:0 auto}
+#ko-canvas{display:block;width:100%;border-radius:14px;background:linear-gradient(#EAF1F8,#FBF7EE 70%);border:1.5px solid var(--rule);touch-action:none;cursor:grab}
+.ko-list{display:grid;gap:6px;margin-top:12px}
+@media(min-width:640px){.ko-list{grid-template-columns:1fr 1fr}}
+.ko-item{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1.5px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:14px;line-height:1.3}
+.ko-item .n{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:grid;place-items:center;flex:0 0 auto;font-size:13px}
+.ko-item.false-hit{border-color:var(--ok);background:#EEF6F0}.ko-item.false-hit .n{background:var(--ok)}
+.ko-item.true-hit{border-color:var(--bad);background:#FBEDEC}.ko-item.true-hit .n{background:var(--bad)}
+.ko-item.reveal{border-color:var(--gold)}
+.ko-item small{display:block;color:var(--muted);margin-top:3px;font-size:12.5px}
+.ko-item.false-hit small{color:var(--ok)}
+
+@media(max-width:560px){
+  .games{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .stat b{font-size:22px}
+  .hero{padding:20px 18px 18px}
+  #app{padding:10px 12px 40px}
+  .brand small{display:none}
+  .xp{font-size:13px;padding:6px 10px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app">
+  <header class="top">
+    <button id="backBtn" class="iconbtn" aria-label="Back to the arcade" hidden>←</button>
+    <div class="brand">
+      <div class="crest" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#E4C25A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8c0-3 3-5 6-5s6 2 6 5v6c0 4-3 7-6 7s-6-3-6-7z"/><circle cx="9.3" cy="10" r="1.6" fill="#E4C25A"/><circle cx="14.7" cy="10" r="1.6" fill="#E4C25A"/><path d="M12 12.5l-1 1.5h2z" fill="#E4C25A"/><path d="M4 6l2 2M20 6l-2 2"/></svg></div>
+      <div><b id="topTitle">Philosophers' Arcade</b><small id="topSub">A-level Religious Studies · AQA 7062</small></div>
+    </div>
+    <div class="top-right">
+      <div class="xp" id="xpPill" title="Experience points"><span class="coin"></span><span id="xpVal">0</span> XP</div>
+      <button id="soundBtn" class="iconbtn" aria-label="Toggle sound">🔊</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= HUB ================= -->
+    <section id="scr-hub" class="screen">
+      <div class="hero">
+        <div class="eyebrow">Key concepts · four games · one course</div>
+        <h1>Revise like it's <em>a game</em>.</h1>
+        <p>Every term, scholar and argument in these games comes straight from the AQA 7062 course. Play a round when you have five minutes; the arcade keeps your score.</p>
+        <div class="stats">
+          <div class="stat"><b id="stStreak">0</b><span>Day streak</span></div>
+          <div class="stat"><b id="stPlayed">0</b><span>Rounds played</span></div>
+          <div class="stat"><b id="stSolved">0</b><span>Puzzles solved</span></div>
+        </div>
+        <div class="rank">
+          <div class="bar"><i id="rankBar" style="width:0%"></i></div>
+          <small><span id="rankName">Novice</span><span id="rankNext">200 XP to Apprentice</span></small>
+        </div>
+      </div>
+
+      <div class="section-h"><h2>Pick a paper</h2><small>Filters every game's questions</small></div>
+      <div class="chips" id="paperChips"></div>
+
+      <div class="section-h"><h2>Choose a game</h2><small id="poolNote"></small></div>
+      <div class="games">
+        <button class="game" data-go="wordle" style="--g:var(--ph)">
+          <div class="glyph"><svg viewBox="0 0 40 40" fill="none"><rect x="4" y="4" width="9" height="9" rx="2" fill="#fff" opacity=".35"/><rect x="15.5" y="4" width="9" height="9" rx="2" fill="#fff"/><rect x="27" y="4" width="9" height="9" rx="2" fill="#fff" opacity=".35"/><rect x="4" y="15.5" width="9" height="9" rx="2" fill="#E4C25A"/><rect x="15.5" y="15.5" width="9" height="9" rx="2" fill="#fff" opacity=".35"/><rect x="27" y="15.5" width="9" height="9" rx="2" fill="#fff"/><rect x="4" y="27" width="9" height="9" rx="2" fill="#fff"/><rect x="15.5" y="27" width="9" height="9" rx="2" fill="#fff"/><rect x="27" y="27" width="9" height="9" rx="2" fill="#E4C25A"/></svg></div>
+          <div><h3><small>Wordle-style</small>Key Term</h3><p>Six guesses to find the key term from its definition. A new daily word, or practise as many as you like.</p><div class="meta"><span id="mWordle"></span><span>2 min</span></div></div>
+        </button>
+        <button class="game" data-go="connect" style="--g:var(--chr)">
+          <div class="glyph"><svg viewBox="0 0 40 40" fill="none"><rect x="4" y="5" width="32" height="6" rx="2" fill="#F2D06B"/><rect x="4" y="13.5" width="32" height="6" rx="2" fill="#9FCB7A"/><rect x="4" y="22" width="32" height="6" rx="2" fill="#86B3E8"/><rect x="4" y="30.5" width="32" height="6" rx="2" fill="#B58BD9"/></svg></div>
+          <div><h3><small>Connections-style</small>Sort Sixteen</h3><p>Sixteen scholars, terms and ideas hide four groups of four. Find them before your four mistakes run out.</p><div class="meta"><span id="mConnect"></span><span>4 min</span></div></div>
+        </button>
+        <button class="game" data-go="drop" style="--g:var(--eth)">
+          <div class="glyph"><svg viewBox="0 0 40 40" fill="none"><rect x="15" y="3" width="10" height="10" rx="2" fill="#E4C25A"/><path d="M20 15v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M16.5 19.5L20 23l3.5-3.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="27" width="10" height="10" rx="2" fill="#fff" opacity=".5"/><rect x="4" y="16" width="10" height="10" rx="2" fill="#fff" opacity=".5"/><rect x="26" y="27" width="10" height="10" rx="2" fill="#fff" opacity=".5"/><rect x="15" y="27" width="10" height="10" rx="2" fill="#fff"/></svg></div>
+          <div><h3><small>Tetris-style</small>Concept Drop</h3><p>Concepts fall from the top. Steer each one into the column it belongs to before the wrong ones pile up.</p><div class="meta"><span id="mDrop"></span><span>3 min</span></div></div>
+        </button>
+        <button class="game" data-go="knock" style="--g:#7A4E8A">
+          <div class="glyph"><svg viewBox="0 0 40 40" fill="none"><path d="M8 34V20M8 20L4 12M8 20l4-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="4" fill="#E4C25A"/><rect x="24" y="8" width="12" height="8" rx="1.5" fill="#fff"/><rect x="24" y="17" width="12" height="8" rx="1.5" fill="#fff" opacity=".55"/><rect x="24" y="26" width="12" height="8" rx="1.5" fill="#fff"/></svg></div>
+          <div><h3><small>Angry-Birds-style</small>Knock-out</h3><p>Aim, pull, release. Knock down the false and misattributed statements — and leave the true ones standing.</p><div class="meta"><span id="mKnock"></span><span>3 min</span></div></div>
+        </button>
+      </div>
+
+      <div class="how"><b>How to use this in revision.</b>
+        <ol>
+          <li><b>Daily Key Term</b> first — one word a day keeps the vocabulary alive between lessons.</li>
+          <li><b>Sort Sixteen</b> after a lesson: it tests whether you can see the structure of a topic, not just the words.</li>
+          <li><b>Concept Drop</b> and <b>Knock-out</b> are for the week before an assessment: fast recall and spotting the misattribution an examiner would penalise.</li>
+        </ol>
+      </div>
+      <div class="foot">Harlington School · Philosophy &amp; Religious Education · Edu.Ai SV Digital · Progress is saved on this device.</div>
+    </section>
+
+    <!-- ================= WORDLE ================= -->
+    <section id="scr-wordle" class="screen" hidden>
+      <div class="w-wrap">
+        <div class="gbar">
+          <div><h2>Key Term</h2><div class="sub" id="w-sub"></div></div>
+          <div class="w-modes"><button id="w-daily" class="on">Daily</button><button id="w-practice">Practice</button></div>
+        </div>
+        <div class="clue"><div class="lab">Definition</div><p id="w-clue"></p>
+          <div class="hints"><span id="w-paper"></span><span id="w-topic" hidden></span><button id="w-hint" class="btn ghost sm">Hint (−5 XP)</button></div></div>
+        <div class="w-grid" id="w-grid"></div>
+        <div class="kbd" id="w-kbd"></div>
+        <div class="w-foot"><button id="w-new" class="btn ghost sm" hidden>New word ↻</button><button id="w-stats" class="btn ghost sm">My stats</button></div>
+      </div>
+    </section>
+
+    <!-- ================= CONNECTIONS ================= -->
+    <section id="scr-connect" class="screen" hidden>
+      <div class="cn-wrap">
+        <div id="cn-pick">
+          <div class="gbar"><div><h2>Sort Sixteen</h2><div class="sub">Find four groups of four. Yellow is the easiest group, purple the trickiest.</div></div><button id="cn-random" class="btn gold">Random puzzle ▶</button></div>
+          <div class="list" id="cn-list"></div>
+        </div>
+        <div id="cn-board" hidden>
+          <div class="gbar"><div><h2 id="cn-title"></h2><div class="sub" id="cn-sub"></div></div><button id="cn-back" class="btn ghost sm">All puzzles</button></div>
+          <div class="cn-solved" id="cn-solved"></div>
+          <div class="cn-grid" id="cn-grid"></div>
+          <div class="cn-bar">
+            <div class="lives" id="cn-lives">Mistakes remaining: <i></i><i></i><i></i><i></i></div>
+            <div class="cn-acts"><button id="cn-shuffle" class="btn ghost sm">Shuffle</button><button id="cn-clear" class="btn ghost sm">Deselect</button><button id="cn-submit" class="btn sm" disabled>Submit</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CONCEPT DROP ================= -->
+    <section id="scr-drop" class="screen" hidden>
+      <div class="dr-wrap">
+        <div id="dr-pick">
+          <div class="gbar"><div><h2>Concept Drop</h2><div class="sub">Each concept belongs in one column. ◀ ▶ to steer, ▼ to speed up, ⤓ to drop. Five in a row clears a mistake.</div></div></div>
+          <div class="list" id="dr-list"></div>
+        </div>
+        <div id="dr-game" hidden>
+          <div class="gbar"><div><h2 id="dr-title"></h2></div>
+            <div class="hud"><div class="pill"><em>Score</em><span id="dr-score">0</span></div><div class="pill"><em>Level</em><span id="dr-level">1</span></div><div class="pill"><em>Streak</em><span id="dr-streak">0</span></div><button id="dr-pause" class="btn ghost sm">Pause</button></div></div>
+          <div class="dr-cols" id="dr-cols"></div>
+          <canvas id="dr-canvas" width="520" height="440"></canvas>
+          <div class="dr-ctl"><button data-k="left" aria-label="Move left">◀</button><button data-k="down" aria-label="Soft drop">▼</button><button data-k="right" aria-label="Move right">▶</button><button data-k="drop" aria-label="Hard drop">⤓</button></div>
+          <div class="dr-next">Next up: <b id="dr-next">—</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= KNOCK-OUT ================= -->
+    <section id="scr-knock" class="screen" hidden>
+      <div class="ko-wrap">
+        <div id="ko-pick">
+          <div class="gbar"><div><h2>Knock-out</h2><div class="sub">Eight statements on the tower. Four are false or misattributed — knock those out and leave the true ones standing. Three lives, seven shots.</div></div></div>
+          <div class="list" id="ko-list"></div>
+        </div>
+        <div id="ko-game" hidden>
+          <div class="gbar"><div><h2 id="ko-title"></h2></div>
+            <div class="hud"><div class="pill"><em>Targets</em><span id="ko-left">4</span></div><div class="pill"><em>Shots</em><span id="ko-shots">7</span></div><div class="pill"><em>Score</em><span id="ko-score">0</span></div><div class="pill hearts" id="ko-hearts">♥♥♥</div><button id="ko-retry" class="btn ghost sm">Restart</button></div></div>
+          <canvas id="ko-canvas" width="720" height="380"></canvas>
+          <p class="help center" style="margin-top:6px">Drag the ball back from the slingshot, then let go. Numbers on the crates match the statements below.</p>
+          <div class="ko-list" id="ko-items"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" role="status"></div>
+  <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><div class="body" id="m-body"></div><div class="acts" id="m-acts"></div></div></div>
+  <canvas id="confetti"></canvas>
+</div>
+
+<script>
+// ============================================================
+//  RS REVISION ARCADE — CONTENT PACK: A-level Religious Studies (AQA 7062)
+//  Papers: p1ph = Paper 1 Philosophy of religion · p1eth = Paper 1 Ethics · p2 = Paper 2 Christianity
+//  Edit freely: every game reads only from this object.
+// ============================================================
+const COURSE = {
+  id: "alevel", name: "A-level Religious Studies", spec: "AQA 7062", short: "A-level RS",
+  papers: [
+    { id: "p1ph",  label: "Paper 1 · Philosophy",  col: "#2F5D8A" },
+    { id: "p1eth", label: "Paper 1 · Ethics",      col: "#B0413E" },
+    { id: "p2",    label: "Paper 2 · Christianity", col: "#3C7A5A" }
+  ],
+
+  // ---------- WORDLE · KEY TERM  (4–9 letters, single word) ----------
+  terms: [
+    // Paper 1 · Philosophy
+    { t:"PALEY", p:"p1ph", topic:"Design argument", clue:"Archdeacon whose watch found on a heath launches the analogical design argument" },
+    { t:"WATCH", p:"p1ph", topic:"Design argument", clue:"Paley's object found on the heath: its parts fit together for a purpose, so it must have had a maker" },
+    { t:"ANALOGY", p:"p1ph", topic:"Design argument", clue:"Paley's form of reasoning: the universe is like a machine, so it has a maker as a machine does" },
+    { t:"HUME", p:"p1ph", topic:"Design argument", clue:"Scottish empiricist who attacks design, the cosmological argument and belief in miracles" },
+    { t:"EPICURUS", p:"p1ph", topic:"Design argument", clue:"Ancient atomist; Hume's hypothesis named after him says order can arise by chance given enough time" },
+    { t:"INDUCTIVE", p:"p1ph", topic:"Arguments for God", clue:"Type of argument that reasons from experience to a probable conclusion (design, cosmological)" },
+    { t:"DEDUCTIVE", p:"p1ph", topic:"Ontological argument", clue:"Type of argument whose conclusion follows necessarily from its premises, like Anselm's" },
+    { t:"ANSELM", p:"p1ph", topic:"Ontological argument", clue:"Archbishop whose Proslogion defines God as 'that than which nothing greater can be conceived'" },
+    { t:"GAUNILO", p:"p1ph", topic:"Ontological argument", clue:"Monk who replied to Anselm 'on behalf of the fool' with the perfect island" },
+    { t:"ISLAND", p:"p1ph", topic:"Ontological argument", clue:"Gaunilo's example: the most perfect one imaginable need not actually exist" },
+    { t:"PREDICATE", p:"p1ph", topic:"Ontological argument", clue:"Kant: existence is not a real one of these — it adds nothing to the concept of a thing" },
+    { t:"KANT", p:"p1ph", topic:"Ontological argument", clue:"German philosopher: 'existence is not a predicate', and duty comes before consequences" },
+    { t:"AQUINAS", p:"p1ph", topic:"Cosmological argument", clue:"Dominican whose Third Way argues from contingency to a necessary being" },
+    { t:"NECESSARY", p:"p1ph", topic:"Cosmological argument", clue:"A being that cannot not exist — the end point of Aquinas' Third Way" },
+    { t:"RUSSELL", p:"p1ph", topic:"Cosmological argument", clue:"Told Copleston in 1948 that the universe is 'just there, and that's all'" },
+    { t:"BRUTE", p:"p1ph", topic:"Cosmological argument", clue:"Russell's word for a fact with no further explanation: the universe is a ___ fact" },
+    { t:"INFINITE", p:"p1ph", topic:"Cosmological argument", clue:"Hume and Russell ask why a chain of causes could not be this — without any beginning" },
+    { t:"FALLACY", p:"p1ph", topic:"Cosmological argument", clue:"Of composition: Russell says every human has a mother, but the human race does not" },
+    { t:"MACKIE", p:"p1ph", topic:"Evil and suffering", clue:"Author of 'Evil and Omnipotence' and the inconsistent triad" },
+    { t:"TRIAD", p:"p1ph", topic:"Evil and suffering", clue:"Mackie's inconsistent trio: God is omnipotent, God is wholly good, evil exists" },
+    { t:"MORAL", p:"p1ph", topic:"Evil and suffering", clue:"Type of evil caused by free human choices, such as murder or theft" },
+    { t:"NATURAL", p:"p1ph", topic:"Evil and suffering", clue:"Type of evil caused by the world itself: earthquakes, disease, floods" },
+    { t:"ROWE", p:"p1ph", topic:"Evil and suffering", clue:"Philosopher whose fawn dying slowly in a forest fire states the evidential problem" },
+    { t:"FAWN", p:"p1ph", topic:"Evil and suffering", clue:"Rowe's animal, burning in a forest fire: pointless suffering that no one even sees" },
+    { t:"HICK", p:"p1ph", topic:"Evil and suffering", clue:"Soul-making theodicy, eschatological verification and religious pluralism all come from him" },
+    { t:"IRENAEUS", p:"p1ph", topic:"Evil and suffering", clue:"Early Church Father whose two-stage creation (image, then likeness) grounds Hick's theodicy" },
+    { t:"EPISTEMIC", p:"p1ph", topic:"Evil and suffering", clue:"Hick's kind of 'distance': God stays hidden so that faith remains free" },
+    { t:"PLANTINGA", p:"p1ph", topic:"Evil and suffering", clue:"His free will defence uses possible worlds to show God and evil are logically compatible" },
+    { t:"GRIFFIN", p:"p1ph", topic:"Evil and suffering", clue:"Process theologian: God persuades but cannot coerce, and did not create from nothing" },
+    { t:"PROCESS", p:"p1ph", topic:"Evil and suffering", clue:"Theodicy in which God is not omnipotent and creation came from chaos, not from nothing" },
+    { t:"OTTO", p:"p1ph", topic:"Religious experience", clue:"Coined 'numinous' in The Idea of the Holy: the mysterium tremendum et fascinans" },
+    { t:"NUMINOUS", p:"p1ph", topic:"Religious experience", clue:"Otto's word for an apprehension of the wholly other" },
+    { t:"JAMES", p:"p1ph", topic:"Religious experience", clue:"American psychologist who listed four marks of mysticism in The Varieties of Religious Experience" },
+    { t:"NOETIC", p:"p1ph", topic:"Religious experience", clue:"James's mark: the experience brings knowledge, not just feeling" },
+    { t:"INEFFABLE", p:"p1ph", topic:"Religious experience", clue:"James's mark: beyond words" },
+    { t:"TRANSIENT", p:"p1ph", topic:"Religious experience", clue:"James's mark: it does not last long" },
+    { t:"PASSIVE", p:"p1ph", topic:"Religious experience", clue:"James's mark: the person feels held by a superior power, not in control" },
+    { t:"STACE", p:"p1ph", topic:"Religious experience", clue:"Distinguished extrovertive and introvertive mystical union with the divine" },
+    { t:"CORPOREAL", p:"p1ph", topic:"Religious experience", clue:"Augustine's type of vision seen with the physical eyes, like Bernadette at Lourdes" },
+    { t:"SWINBURNE", p:"p1ph", topic:"Religious experience", clue:"Principles of credulity and testimony: take experiences at face value unless there is reason not to" },
+    { t:"CREDULITY", p:"p1ph", topic:"Religious experience", clue:"Swinburne's principle: what seems to be so, probably is so" },
+    { t:"TESTIMONY", p:"p1ph", topic:"Religious experience", clue:"Swinburne's principle: believe what people tell you unless you have reason not to" },
+    { t:"FREUD", p:"p1ph", topic:"Religious experience", clue:"Religious experience as wish fulfilment; conscience as the superego" },
+    { t:"PERSINGER", p:"p1ph", topic:"Religious experience", clue:"Neuroscientist whose 'God helmet' stimulated the temporal lobes" },
+    { t:"TEMPORAL", p:"p1ph", topic:"Religious experience", clue:"The lobe of the brain linked to religious experience by Persinger" },
+    { t:"AYER", p:"p1ph", topic:"Religious language", clue:"Logical positivist: 'God exists' is meaningless because it cannot be verified" },
+    { t:"FLEW", p:"p1ph", topic:"Religious language", clue:"Falsification: the invisible gardener dies 'the death of a thousand qualifications'" },
+    { t:"GARDENER", p:"p1ph", topic:"Religious language", clue:"The invisible, intangible one in Flew's parable" },
+    { t:"HARE", p:"p1ph", topic:"Religious language", clue:"Religious language as a blik: an unfalsifiable way of seeing the world (the paranoid student)" },
+    { t:"BLIK", p:"p1ph", topic:"Religious language", clue:"Hare's word for a non-cognitive framework that no evidence can shake" },
+    { t:"MITCHELL", p:"p1ph", topic:"Religious language", clue:"The partisan and the stranger: believers do weigh evidence but keep trusting" },
+    { t:"TILLICH", p:"p1ph", topic:"Religious language", clue:"Symbols 'participate' in what they point to; God is 'being-itself'" },
+    { t:"SYMBOL", p:"p1ph", topic:"Religious language", clue:"Tillich: religious language works this way — it participates in what it points to" },
+    { t:"UNIVOCAL", p:"p1ph", topic:"Religious language", clue:"Aquinas rejects using words this way — in exactly the same sense of God and of creatures" },
+    { t:"EQUIVOCAL", p:"p1ph", topic:"Religious language", clue:"Words used with totally different meanings — Aquinas says this would make God-talk useless" },
+    { t:"NEGATIVA", p:"p1ph", topic:"Religious language", clue:"Via ___: say only what God is not" },
+    { t:"GAMES", p:"p1ph", topic:"Religious language", clue:"Wittgenstein: language ___ — meaning is its use inside a form of life" },
+    { t:"VERIFY", p:"p1ph", topic:"Religious language", clue:"The Vienna Circle's test: a statement is meaningful only if you can ___ it by sense experience" },
+    { t:"COGNITIVE", p:"p1ph", topic:"Religious language", clue:"Language that makes factual claims which can be true or false" },
+    { t:"WILES", p:"p1ph", topic:"Miracles", clue:"Argued that a God who does occasional miracles would be arbitrary and unworthy of worship" },
+    { t:"HOLLAND", p:"p1ph", topic:"Miracles", clue:"Contingency miracle: the boy on the railway line — a coincidence read religiously" },
+    { t:"VIOLATION", p:"p1ph", topic:"Miracles", clue:"Hume's definition: a miracle is a ___ of the laws of nature" },
+    { t:"REALIST", p:"p1ph", topic:"Miracles", clue:"View that a miracle is an objective event caused by God, not just an interpretation" },
+    { t:"PLATO", p:"p1ph", topic:"Self, death and afterlife", clue:"The soul is immortal and pre-exists the body; the charioteer and the Forms" },
+    { t:"DESCARTES", p:"p1ph", topic:"Self, death and afterlife", clue:"'I think, therefore I am': mind and body are two distinct substances" },
+    { t:"DUALISM", p:"p1ph", topic:"Self, death and afterlife", clue:"Body and soul are two different kinds of substance" },
+    { t:"RYLE", p:"p1ph", topic:"Self, death and afterlife", clue:"'The ghost in the machine' — dualism is a category mistake" },
+    { t:"CATEGORY", p:"p1ph", topic:"Self, death and afterlife", clue:"Ryle's 'mistake': treating the mind as an extra thing, like looking for the university beside its colleges" },
+    { t:"DAWKINS", p:"p1ph", topic:"Self, death and afterlife", clue:"Materialist: we are 'survival machines' for our genes; author of The God Delusion" },
+    { t:"REPLICA", p:"p1ph", topic:"Self, death and afterlife", clue:"Hick's thought experiment: an exact copy of you appearing in New York — or in the next world" },
+    { t:"PRICE", p:"p1ph", topic:"Self, death and afterlife", clue:"H. H. ___: a dream-like mental world after death made of memories and desires" },
+    { t:"BUNDLE", p:"p1ph", topic:"Self, death and afterlife", clue:"Hume and Parfit: the self is only a ___ of perceptions, with no owner underneath" },
+    { t:"REBIRTH", p:"p1ph", topic:"Self, death and afterlife", clue:"Buddhist alternative to reincarnation with no permanent self carried over" },
+    { t:"KARMA", p:"p1ph", topic:"Self, death and afterlife", clue:"The moral law of cause and effect that drives reincarnation" },
+    { t:"AUGUSTINE", p:"p1ph", topic:"Evil and suffering", clue:"Evil is privatio boni — a lack of good; three kinds of vision; resurrection of the flesh" },
+
+    // Paper 1 · Ethics
+    { t:"TELOS", p:"p1eth", topic:"Natural Moral Law", clue:"Greek for purpose or goal — the end that all things aim at (Aristotle, Aquinas)" },
+    { t:"PRECEPT", p:"p1eth", topic:"Natural Moral Law", clue:"Aquinas' primary ones: preserve life, reproduce, educate, live in society, worship God" },
+    { t:"DOUBLE", p:"p1eth", topic:"Natural Moral Law", clue:"The principle of ___ effect: an act with a bad side-effect may be allowed if the bad is not intended" },
+    { t:"RATIO", p:"p1eth", topic:"Natural Moral Law", clue:"Aquinas: right reason (recta ___) is how humans read the natural law" },
+    { t:"APPARENT", p:"p1eth", topic:"Natural Moral Law", clue:"Aquinas: an ___ good only seems good — sin is choosing it over a real good" },
+    { t:"FLETCHER", p:"p1eth", topic:"Situation Ethics", clue:"Situation Ethics (1966): 'love is the only norm'" },
+    { t:"AGAPE", p:"p1eth", topic:"Situation Ethics", clue:"Unconditional love — the single absolute of situation ethics" },
+    { t:"SITUATION", p:"p1eth", topic:"Situation Ethics", clue:"Fletcher's ethics is named after this — the context each decision sits in" },
+    { t:"ARISTOTLE", p:"p1eth", topic:"Virtue Ethics", clue:"Virtue ethics: the golden mean and eudaimonia" },
+    { t:"VIRTUE", p:"p1eth", topic:"Virtue Ethics", clue:"A good character trait found between two vices, such as courage" },
+    { t:"MEAN", p:"p1eth", topic:"Virtue Ethics", clue:"The golden one — between excess and deficiency" },
+    { t:"PHRONESIS", p:"p1eth", topic:"Virtue Ethics", clue:"Aristotle's practical wisdom — knowing how to act well in the situation" },
+    { t:"HABIT", p:"p1eth", topic:"Virtue Ethics", clue:"Aristotle: we become virtuous by practising virtue until it becomes one of these" },
+    { t:"BENTHAM", p:"p1eth", topic:"Bentham and Kant", clue:"Act utilitarianism and the hedonic calculus: 'the greatest happiness of the greatest number'" },
+    { t:"HEDONIC", p:"p1eth", topic:"Bentham and Kant", clue:"Bentham's ___ calculus weighs pleasure by intensity, duration, certainty and more" },
+    { t:"UTILITY", p:"p1eth", topic:"Bentham and Kant", clue:"Bentham's principle: the usefulness of an act in producing pleasure over pain" },
+    { t:"MILL", p:"p1eth", topic:"Bentham and Kant", clue:"Utilitarian who ranked higher and lower pleasures — 'better Socrates dissatisfied'" },
+    { t:"DUTY", p:"p1eth", topic:"Bentham and Kant", clue:"Kant: do the right thing for its own sake, from the good will" },
+    { t:"MAXIM", p:"p1eth", topic:"Bentham and Kant", clue:"Kant: the personal rule behind an action, which must be universalisable" },
+    { t:"ENDS", p:"p1eth", topic:"Bentham and Kant", clue:"Kant: treat humanity always as ___ in themselves, never merely as means" },
+    { t:"SUMMUM", p:"p1eth", topic:"Bentham and Kant", clue:"Kant's ___ bonum: the highest good, where virtue meets happiness — his reason to postulate God" },
+    { t:"MOORE", p:"p1eth", topic:"Meta-ethics", clue:"Intuitionist: 'good' is simple and indefinable, like yellow; the naturalistic fallacy" },
+    { t:"INTUITION", p:"p1eth", topic:"Meta-ethics", clue:"Moore: we know what is good by this — a direct, self-evident awareness" },
+    { t:"COMMAND", p:"p1eth", topic:"Meta-ethics", clue:"Divine ___ Theory: 'right' just means 'willed by God'" },
+    { t:"EUTHYPHRO", p:"p1eth", topic:"Meta-ethics", clue:"Plato's dilemma: is it good because God commands it, or commanded because it is good?" },
+    { t:"OPEN", p:"p1eth", topic:"Meta-ethics", clue:"Moore's ___ question argument: 'X is pleasant, but is it good?' always makes sense to ask" },
+    { t:"HARD", p:"p1eth", topic:"Free will", clue:"___ determinism: every choice is caused, so no one is morally responsible" },
+    { t:"SOFT", p:"p1eth", topic:"Free will", clue:"___ determinism (compatibilism): free means acting on your own desires, even if they are caused" },
+    { t:"CALVIN", p:"p1eth", topic:"Free will", clue:"Predestination: God has already chosen the elect" },
+    { t:"SUPEREGO", p:"p1eth", topic:"Conscience", clue:"Freud: the internalised parental voice that we experience as conscience" },
+    { t:"BUTLER", p:"p1eth", topic:"Conscience", clue:"Bishop who called conscience the 'sovereign' guide that reflects on self-love and benevolence" },
+    { t:"KOHLBERG", p:"p1eth", topic:"Conscience", clue:"Six stages of moral development from pre-conventional to post-conventional" },
+    { t:"DURKHEIM", p:"p1eth", topic:"Conscience", clue:"Sociologist: conscience is the voice of society's collective consciousness" },
+    { t:"FROMM", p:"p1eth", topic:"Conscience", clue:"Authoritarian conscience (fear) versus humanistic conscience (our true self)" },
+    { t:"EMBRYO", p:"p1eth", topic:"Applied ethics", clue:"Human being at the earliest stage; research on it is allowed in the UK up to 14 days" },
+    { t:"CLONING", p:"p1eth", topic:"Applied ethics", clue:"Making a genetic copy — therapeutic or reproductive" },
+    { t:"SANCTITY", p:"p1eth", topic:"Applied ethics", clue:"The ___ of life: life is sacred because it is God-given (Genesis 1:27)" },
+    { t:"SINGER", p:"p1eth", topic:"Applied ethics", clue:"Utilitarian author of Animal Liberation and opponent of speciesism" },
+
+    // Paper 2 · Christianity
+    { t:"INSPIRED", p:"p2", topic:"Sources of wisdom and authority", clue:"The Bible is ___ by God but written by human beings — the spec's own phrase" },
+    { t:"LITERAL", p:"p2", topic:"Sources of wisdom and authority", clue:"Reading the Bible as word-for-word true, e.g. six-day creation" },
+    { t:"LIBERAL", p:"p2", topic:"Sources of wisdom and authority", clue:"Approach that reads the Bible as human writing shaped by its time, open to reinterpretation" },
+    { t:"CATHOLIC", p:"p2", topic:"Sources of wisdom and authority", clue:"Tradition in which the Church's Magisterium interprets scripture with authority" },
+    { t:"TRINITY", p:"p2", topic:"God", clue:"One God in three persons: Father, Son and Holy Spirit" },
+    { t:"ALMIGHTY", p:"p2", topic:"God", clue:"God's all-powerful nature — the word the creeds use" },
+    { t:"ETERNAL", p:"p2", topic:"God", clue:"Boethius' view of God: outside time, seeing everything at once" },
+    { t:"BOETHIUS", p:"p2", topic:"God", clue:"God's eternity as 'the whole, simultaneous and perfect possession of boundless life'" },
+    { t:"FATHER", p:"p2", topic:"God", clue:"The personal image of God that Jesus used — challenged by feminist theologians as gendered" },
+    { t:"GLORIFY", p:"p2", topic:"Self, death and afterlife", clue:"Westminster Catechism: the chief end of humans is to ___ God and enjoy him forever" },
+    { t:"PURGATORY", p:"p2", topic:"Self, death and afterlife", clue:"Catholic state of purification after death — rejected by Protestants" },
+    { t:"HELL", p:"p2", topic:"Self, death and afterlife", clue:"Eternal separation from God — physical fire, or a psychological state?" },
+    { t:"JUDGEMENT", p:"p2", topic:"Self, death and afterlife", clue:"Christians expect this after death — at once (particular) and at the end (general)" },
+    { t:"OBJECTIVE", p:"p2", topic:"Self, death and afterlife", clue:"Process thought: ___ immortality — you live on in God's memory, not personally" },
+    { t:"FAITH", p:"p2", topic:"Good conduct", clue:"Luther: justification is by ___ alone (sola fide), not by works" },
+    { t:"WORKS", p:"p2", topic:"Good conduct", clue:"James 2:17 — faith without ___ is dead" },
+    { t:"ELECT", p:"p2", topic:"Good conduct", clue:"Calvin's chosen: those God has predestined to salvation" },
+    { t:"DOMINION", p:"p2", topic:"Good conduct", clue:"Genesis 1:28 — human rule over animals: ___ or stewardship?" },
+    { t:"STEWARD", p:"p2", topic:"Good conduct", clue:"The Christian who cares for creation on God's behalf rather than owning it" },
+    { t:"PACIFISM", p:"p2", topic:"Good conduct", clue:"Refusing all violence — following Matthew 5:39, 'turn the other cheek'" },
+    { t:"BAPTISM", p:"p2", topic:"Expressions of religious identity", clue:"Sacrament of entry into the Church — infant (Catholic) or believer's (Baptist)" },
+    { t:"BELIEVER", p:"p2", topic:"Expressions of religious identity", clue:"Baptist practice: only a ___ old enough to confess faith is baptised, by full immersion" },
+    { t:"EUCHARIST", p:"p2", topic:"Expressions of religious identity", clue:"Holy Communion — also Mass, the Lord's Supper, the Breaking of Bread" },
+    { t:"MEMORIAL", p:"p2", topic:"Expressions of religious identity", clue:"Baptist view of communion: a remembrance, not a real presence ('do this in memory of me')" },
+    { t:"MISSION", p:"p2", topic:"Expressions of religious identity", clue:"The Church's task of spreading the gospel — from foreign missions to missio Dei" },
+    { t:"HAMPSON", p:"p2", topic:"Gender and sexuality", clue:"Post-Christian theologian: Christianity is 'irredeemably sexist'" },
+    { t:"RUETHER", p:"p2", topic:"Gender and sexuality", clue:"Feminist theologian: the 'androgynous Christ' — the female nature is more Christlike" },
+    { t:"PRIEST", p:"p2", topic:"Gender and sexuality", clue:"Women became this in the Church of England in 1994 — and bishops in 2014" },
+    { t:"CELIBACY", p:"p2", topic:"Gender and sexuality", clue:"Abstaining from marriage and sex — required of Catholic priests, praised by Paul" },
+    { t:"GAPS", p:"p2", topic:"Christianity and science", clue:"'God of the ___': using God to explain what science cannot yet — a shrinking God" },
+    { t:"DARWIN", p:"p2", topic:"Christianity and science", clue:"1859, On the Origin of Species — natural selection challenged Genesis" },
+    { t:"EVOLUTION", p:"p2", topic:"Christianity and science", clue:"Species change over time by natural selection — creationists reject it" },
+    { t:"CREATION", p:"p2", topic:"Christianity and science", clue:"Creationists read the Genesis account of this as literal history" },
+    { t:"PHYSICIST", p:"p2", topic:"Christianity and science", clue:"Polkinghorne was one before he became a priest — science and faith as 'two eyes'" },
+    { t:"GENETIC", p:"p2", topic:"Christianity and science", clue:"___ engineering: altering DNA — playing God, or good stewardship?" },
+    { t:"SECULAR", p:"p2", topic:"Secularisation", clue:"A society where religion has been pushed out of public life into the private sphere" },
+    { t:"MCGRATH", p:"p2", topic:"Secularisation", clue:"Wrote The Dawkins Delusion in reply to The God Delusion" },
+    { t:"FRESH", p:"p2", topic:"Secularisation", clue:"___ Expressions: new forms of church for people outside existing congregations" },
+    { t:"HOUSE", p:"p2", topic:"Secularisation", clue:"The ___ church movement: worship in homes rather than church buildings" },
+    { t:"MILITANT", p:"p2", topic:"Secularisation", clue:"___ atheism: religion should be actively opposed, not just doubted" },
+    { t:"WEALTH", p:"p2", topic:"Secularisation", clue:"Secular materialism prizes this; Jesus said you cannot serve God and Mammon" },
+    { t:"POOR", p:"p2", topic:"Secularisation", clue:"Liberation theology's 'preferential option for the ___'" },
+    { t:"PLURALISM", p:"p2", topic:"Migration and pluralism", clue:"Hick: all religions are valid paths to the one Real" },
+    { t:"RAHNER", p:"p2", topic:"Migration and pluralism", clue:"Inclusivist who coined 'anonymous Christians'" },
+    { t:"BARTH", p:"p2", topic:"Migration and pluralism", clue:"Exclusivist: revelation comes only through Christ; religion is unbelief" },
+    { t:"ANONYMOUS", p:"p2", topic:"Migration and pluralism", clue:"Rahner's ___ Christian: a good person of another faith saved through Christ without knowing it" },
+    { t:"EWEIDA", p:"p2", topic:"Migration and pluralism", clue:"Nadia ___ v British Airways: the right to wear a cross at work (ECHR, 2013)" },
+    { t:"MIGRATION", p:"p2", topic:"Migration and pluralism", clue:"The movement of people that has made Britain a multi-faith society" }
+  ],
+
+  // ---------- CONNECTIONS · SORT 16 ----------
+  // tiers: 0 yellow (easiest) → 3 purple (trickiest)
+  connections: [
+    { id:"c1", p:"p1ph", title:"Arguments and answers", groups:[
+      { name:"James's four marks of mysticism", why:"Ineffable, noetic, transient, passive — The Varieties of Religious Experience", items:["Ineffable","Noetic","Transient","Passive"] },
+      { name:"Responses to the problem of evil", why:"Each is a theodicy or defence: Plantinga, Hick, Griffin, Augustine", items:["Free will defence","Soul-making","Process theodicy","Privatio boni"] },
+      { name:"Aquinas' Third Way", why:"From contingency to a necessary being — and Russell's reply", items:["Contingency","Necessary being","Way 3","Brute fact"] },
+      { name:"Hume's criticisms of design", why:"Each attacks a rung of Paley's inference", items:["Lesser being","Epicurean hypothesis","Machine analogy fails","Anthropomorphism"] }
+    ]},
+    { id:"c2", p:"p1eth", title:"The ethics toolkit", groups:[
+      { name:"Aquinas' primary precepts", why:"The five precepts of Natural Moral Law (plus 'live in society')", items:["Preserve life","Reproduce","Educate","Worship God"] },
+      { name:"Bentham's hedonic calculus", why:"Seven criteria for measuring pleasure", items:["Intensity","Duration","Certainty","Propinquity"] },
+      { name:"Kant's key ideas", why:"Deontology: the good will acting from duty on universalisable maxims", items:["Good will","Duty","Maxim","Categorical imperative"] },
+      { name:"Fletcher's four working principles", why:"The presuppositions of Situation Ethics", items:["Pragmatism","Relativism","Positivism","Personalism"] }
+    ]},
+    { id:"c3", p:"p1eth", title:"Meta-ethics, free will, conscience", groups:[
+      { name:"Positions on free will", why:"Libertarian · hard determinist · compatibilist · theological", items:["Hard determinism","Libertarianism","Compatibilism","Predestination"] },
+      { name:"Thinkers on conscience", why:"Psychological, developmental, religious and sociological accounts", items:["Freud","Kohlberg","Butler","Durkheim"] },
+      { name:"Moore's intuitionism", why:"Good is simple, indefinable and known by intuition", items:["Open question","Naturalistic fallacy","Self-evident","Like yellow"] },
+      { name:"Divine Command Theory", why:"Right means 'willed by God' — and the classic objection", items:["Euthyphro dilemma","Ockham","Adams","Arbitrariness"] }
+    ]},
+    { id:"c4", p:"p2", title:"God and authority", groups:[
+      { name:"Attributes of God", why:"Classical theism's 'omni' God", items:["Omnipotent","Omniscient","Omnibenevolent","Eternal"] },
+      { name:"The Trinity", why:"Three persons, one God — defined at Nicaea", items:["Father","Son","Holy Spirit","Nicene Creed"] },
+      { name:"Sources of wisdom and authority", why:"Where Christians look for God's word", items:["Bible","Magisterium","Tradition","Sermon on the Mount"] },
+      { name:"Process theology", why:"God persuades, does not create from nothing, and remembers all", items:["Persuasion","Not creator","Dipolar","Objective immortality"] }
+    ]},
+    { id:"c5", p:"p1ph", title:"Self, death and afterlife", groups:[
+      { name:"Christian afterlife states", why:"Physical, spiritual or psychological realities?", items:["Heaven","Hell","Purgatory","Judgement"] },
+      { name:"Theories of life after death", why:"Ways of surviving death", items:["Replica theory","Reincarnation","Rebirth","Resurrection"] },
+      { name:"Dualism", why:"Plato and Descartes: soul and body are separate", items:["Plato","Descartes","Charioteer","Cogito"] },
+      { name:"Materialist attacks on dualism", why:"Ryle and Dawkins: no ghost, only the machine", items:["Ryle","Dawkins","Category mistake","Ghost in the machine"] }
+    ]},
+    { id:"c6", p:"p1ph", title:"Religious language", groups:[
+      { name:"Verification", why:"Ayer and the Vienna Circle — and Hick's eschatological reply", items:["Ayer","Vienna Circle","Strong verification","Eschatological"] },
+      { name:"Falsification", why:"Flew's challenge and the replies of Hare and Mitchell", items:["Flew","Gardener","Bliks","Partisan"] },
+      { name:"Aquinas on analogy", why:"Between univocal and equivocal: attribution and proportion", items:["Attribution","Proportion","Univocal","Equivocal"] },
+      { name:"Other responses", why:"Non-cognitive and apophatic approaches", items:["Tillich","Wittgenstein","Via negativa","Language games"] }
+    ]},
+    { id:"c7", p:"p1ph", title:"Experience and miracles", groups:[
+      { name:"Augustine's types of vision", why:"Corporeal, imaginative, intellectual — Bernadette saw with her eyes", items:["Corporeal","Imaginative","Intellectual","Bernadette"] },
+      { name:"Challenges to religious experience", why:"Psychological and physiological explanations", items:["Freud","Persinger","Temporal lobe","Wish fulfilment"] },
+      { name:"Hume against miracles", why:"Of Miracles, Enquiry section X", items:["Violation","Barbarous nations","Rival religions","Love of wonder"] },
+      { name:"Swinburne", why:"Principles for trusting experience and the cumulative case", items:["Credulity","Testimony","Cumulative","Probability"] }
+    ]},
+    { id:"c8", p:"p2", title:"Christianity today", groups:[
+      { name:"Christianity and science", why:"The discoveries and the responses", items:["Big Bang","Darwin","God of the gaps","Polkinghorne"] },
+      { name:"Attitudes to other faiths", why:"Barth, Rahner and Hick", items:["Exclusivism","Inclusivism","Pluralism","Anonymous Christians"] },
+      { name:"Responses to secularisation", why:"How the Church answers a secular age", items:["Fresh Expressions","House church","Dawkins Delusion","Liberation theology"] },
+      { name:"Feminist theology", why:"Hampson and Ruether", items:["Hampson","Ruether","Androgynous Christ","Post-Christian"] }
+    ]},
+    { id:"c9", p:"p1eth", title:"Applied ethics", groups:[
+      { name:"Human life and death issues", why:"The spec's applied human cases", items:["Embryo research","Designer babies","Euthanasia","Capital punishment"] },
+      { name:"Animal issues", why:"Non-human life and death cases", items:["Blood sports","Factory farming","Xenotransplantation","Vivisection"] },
+      { name:"Virtue ethics", why:"Aristotle's vocabulary", items:["Golden mean","Eudaimonia","Phronesis","Habituation"] },
+      { name:"Fletcher's six propositions", why:"Love is the only norm; love and justice are the same; love is not liking; love decides there and then", items:["Love only norm","Love is justice","Love not liking","Love decides there"] }
+    ]},
+    { id:"c10", p:"p2", title:"Expressions of identity", groups:[
+      { name:"Baptism", why:"Infant vs believer's — and why", items:["Infant","Believer's","Immersion","Original sin"] },
+      { name:"Holy Communion", why:"Catholic real presence vs Baptist memorial", items:["Transubstantiation","Real presence","Memorial","Luke 22"] },
+      { name:"Mission", why:"From the Great Commission to today", items:["Great Commission","Evangelism","Missio Dei","Alpha course"] },
+      { name:"Councils and conferences", why:"Nicaea 325 · Trent 1545 · Vatican II 1962 · Edinburgh 1910 (mission)", items:["Nicaea","Trent","Vatican II","Edinburgh 1910"] }
+    ]},
+    { id:"c11", p:"p1eth", title:"Conscience", groups:[
+      { name:"Freud", why:"The psyche and its guilty conscience", items:["Id","Ego","Superego","Guilt"] },
+      { name:"Kohlberg", why:"Stages of moral development", items:["Pre-conventional","Conventional","Post-conventional","Heinz dilemma"] },
+      { name:"Aquinas on conscience", why:"Reason applied to action", items:["Synderesis","Conscientia","Right reason","Invincible ignorance"] },
+      { name:"Applications in the spec", why:"Where conscience is tested", items:["Lying","Promise-breaking","Adultery","Mrs Bergmeier"] }
+    ]},
+    { id:"c12", p:"p1eth", title:"Bentham, Mill and Kant", groups:[
+      { name:"Bentham", why:"Act utilitarianism", items:["Act utilitarianism","Hedonic calculus","Panopticon","Nonsense on stilts"] },
+      { name:"Mill", why:"Rule utilitarianism and higher pleasures", items:["Higher pleasures","Rule utilitarianism","Harm principle","Competent judges"] },
+      { name:"Kant's formulations", why:"The categorical imperative", items:["Universal law","Ends in themselves","Kingdom of ends","Autonomy"] },
+      { name:"Problems for Kant", why:"Standard AO2 criticisms", items:["Enquiring murderer","Conflicting duties","Cold rationalism","Ignores consequences"] }
+    ]}
+  ],
+
+  // ---------- CONCEPT DROP (Tetris-style) ----------
+  drop: [
+    { id:"d1", p:"p1ph", title:"Arguments for God", cols:["Design","Cosmological","Ontological","Religious experience"], items:[
+      ["Paley",0],["Watch on a heath",0],["Epicurean hypothesis",0],["Anthropomorphism",0],["Weak analogy",0],
+      ["Aquinas' Way 3",1],["Contingency",1],["Necessary being",1],["Brute fact",1],["Fallacy of composition",1],["Copleston",1],
+      ["Anselm",2],["Gaunilo's island",2],["Not a predicate",2],["A priori",2],["Greatest conceivable",2],
+      ["Otto's numinous",3],["James's four marks",3],["Credulity",3],["Persinger",3],["Stace",3]
+    ]},
+    { id:"d2", p:"p1eth", title:"Normative theories", cols:["Natural Moral Law","Situation Ethics","Virtue Ethics","Utilitarianism"], items:[
+      ["Aquinas",0],["Primary precepts",0],["Double effect",0],["Synderesis",0],["Proportionalism",0],
+      ["Fletcher",1],["Agape",1],["Pragmatism",1],["Personalism",1],["Mrs Bergmeier",1],
+      ["Aristotle",2],["Golden mean",2],["Eudaimonia",2],["Phronesis",2],["Habituation",2],
+      ["Bentham",3],["Hedonic calculus",3],["Mill",3],["Higher pleasures",3],["Greatest happiness",3]
+    ]},
+    { id:"d3", p:"p1ph", title:"Evil and suffering", cols:["The problem","Free will defence","Soul-making","Process"], items:[
+      ["Inconsistent triad",0],["Rowe's fawn",0],["Ivan's ticket",0],["Epicurus",0],["Natural vs moral",0],
+      ["Plantinga",1],["Possible worlds",1],["Freedom needs real choice",1],["Fallen angels",1],["Mackie's reply",1],
+      ["Hick",2],["Irenaeus",2],["Epistemic distance",2],["Image to likeness",2],["Universal salvation",2],
+      ["Griffin",3],["Persuasion not coercion",3],["Creation from chaos",3],["God not omnipotent",3],["Panentheism",3]
+    ]},
+    { id:"d4", p:"p1ph", title:"Religious language", cols:["Verification","Falsification","Analogy","Symbol & games"], items:[
+      ["Ayer",0],["Vienna Circle",0],["Strong and weak",0],["Eschatological",0],["Meaningless",0],
+      ["Flew",1],["Invisible gardener",1],["Bliks",1],["Mitchell's partisan",1],["Thousand qualifications",1],
+      ["Aquinas",2],["Attribution",2],["Proportion",2],["Univocal",2],["Equivocal",2],
+      ["Tillich",3],["Participates",3],["Wittgenstein",3],["Language games",3],["Form of life",3]
+    ]},
+    { id:"d5", p:"p2", title:"Christianity in the world", cols:["Secularisation","Pluralism","Gender","Science"], items:[
+      ["Fresh Expressions",0],["Militant atheism",0],["Dawkins Delusion",0],["House church",0],["Individualisation",0],
+      ["Hick",1],["Rahner",1],["Barth",1],["Anonymous Christians",1],["John 14:6",1],
+      ["Hampson",2],["Ruether",2],["Female ordination",2],["Androgynous Christ",2],["1 Timothy 2",2],
+      ["Big Bang",3],["Darwin",3],["God of the gaps",3],["Polkinghorne",3],["Creationism",3]
+    ]},
+    { id:"d6", p:"p1ph", title:"Self, death and afterlife", cols:["Dualism","Materialism","Resurrection","Reincarnation"], items:[
+      ["Plato",0],["Descartes",0],["Charioteer",0],["Cogito",0],["Two substances",0],
+      ["Ryle",1],["Dawkins",1],["Category mistake",1],["Ghost in the machine",1],["Brain states",1],
+      ["1 Corinthians 15",2],["Spiritual body",2],["Augustine's flesh",2],["Replica theory",2],["Judgement",2],
+      ["Karma",3],["Rebirth",3],["Stevenson's cases",3],["Samsara",3],["Moksha",3]
+    ]},
+    { id:"d7", p:"p1eth", title:"Conscience", cols:["Freud","Aquinas","Kohlberg","Butler"], items:[
+      ["Superego",0],["Guilt",0],["Id and ego",0],["Parental voice",0],["Oedipus",0],
+      ["Synderesis",1],["Conscientia",1],["Right reason",1],["Invincible ignorance",1],["Natural law",1],
+      ["Six stages",2],["Heinz dilemma",2],["Post-conventional",2],["Moral development",2],["Justice reasoning",2],
+      ["Sovereign guide",3],["Self-love",3],["Benevolence",3],["Reflection",3],["Fifteen Sermons",3]
+    ]},
+    { id:"d8", p:"p2", title:"Christianity: the core", cols:["Sources of authority","God","Afterlife","Good conduct"], items:[
+      ["Inspired not dictated",0],["Magisterium",0],["Sola scriptura",0],["Biblical criticism",0],["Matthew 5",0],
+      ["Trinity",1],["Omnipotent",1],["Father and Love",1],["Process theology",1],["John 10:30",1],
+      ["Purgatory",2],["Resurrection of the flesh",2],["Spiritual resurrection",2],["Objective immortality",2],["1 Corinthians 15",2],
+      ["Justification by faith",3],["Justification by works",3],["Predestination",3],["Stewardship",3],["Just war",3]
+    ]}
+  ],
+
+  // ---------- KNOCK-OUT (slingshot) · f:true = FALSE statement (knock it out) ----------
+  knockout: [
+    { id:"k1", p:"p1ph", title:"Paley and Hume", items:[
+      { s:"Paley's argument is a posteriori — it starts from observation.", f:false },
+      { s:"Paley said the universe is exactly like a watch in every respect.", f:true, why:"Paley argues from a relevant similarity — parts fitted for a purpose — not total likeness." },
+      { s:"Hume argued that order could arise by chance given infinite time.", f:false },
+      { s:"Hume concluded the designer must be the Christian God.", f:true, why:"Hume said at most a limited, possibly plural or imperfect designer follows." },
+      { s:"Hume said the argument at best proves a 'lesser being', not an infinite God.", f:false },
+      { s:"The watch analogy was first proposed by David Hume.", f:true, why:"Paley, Natural Theology (1802). Hume's Dialogues (1779) attack the analogy." },
+      { s:"Paley wrote Natural Theology in 1802.", f:false },
+      { s:"Paley's argument is deductive, so its conclusion is certain.", f:true, why:"It is inductive and analogical — probable at best." }
+    ]},
+    { id:"k2", p:"p1ph", title:"Aquinas' Third Way", items:[
+      { s:"Contingent things can exist or not exist.", f:false },
+      { s:"Aquinas' Third Way argues from motion to an unmoved mover.", f:true, why:"That is the First Way. Way 3 argues from contingency and necessity." },
+      { s:"Russell called the universe a brute fact.", f:false },
+      { s:"Russell accepted Copleston's argument in their 1948 debate.", f:true, why:"He rejected it: 'the universe is just there, and that's all'." },
+      { s:"Hume asked why the whole chain needs a cause if each link is explained.", f:false },
+      { s:"Aquinas' Third Way says the universe must have begun in time.", f:true, why:"Way 3 is not about a temporal beginning — that is the Kalam argument." },
+      { s:"The fallacy of composition: what is true of parts need not be true of the whole.", f:false },
+      { s:"A necessary being is one that depends on something else.", f:true, why:"A necessary being cannot not exist and depends on nothing." }
+    ]},
+    { id:"k3", p:"p1ph", title:"Evil and suffering", items:[
+      { s:"Mackie's inconsistent triad: omnipotent, wholly good, evil exists.", f:false },
+      { s:"Hick's theodicy says evil comes from the fall of Adam.", f:true, why:"That is Augustine. Hick follows Irenaeus — the world is a 'vale of soul-making'." },
+      { s:"Rowe's fawn is an example of the evidential problem.", f:false },
+      { s:"Process theodicy says God could stop evil but chooses not to.", f:true, why:"Griffin: God cannot coerce — God can only persuade." },
+      { s:"Plantinga's free will defence aims to show God and evil are logically compatible.", f:false },
+      { s:"Epistemic distance means God is very far away in space.", f:true, why:"It is a distance in knowledge: God stays hidden so faith stays free." },
+      { s:"Hick believed everyone will eventually be saved.", f:false },
+      { s:"Mackie accepted that free will justifies the existence of evil.", f:true, why:"Mackie said God could have made free beings who always choose the good." }
+    ]},
+    { id:"k4", p:"p1ph", title:"Religious experience", items:[
+      { s:"Otto: the numinous is mysterium tremendum et fascinans.", f:false },
+      { s:"William James listed 'permanence' as a mark of mysticism.", f:true, why:"The mark is transiency — mystical states fade." },
+      { s:"Stace distinguished introvertive and extrovertive experiences.", f:false },
+      { s:"Swinburne's principle of credulity says doubt experiences until they are proven.", f:true, why:"The opposite: accept them unless there is reason not to." },
+      { s:"Persinger's 'God helmet' stimulated the temporal lobes.", f:false },
+      { s:"Freud saw religious experience as proof of God.", f:true, why:"Freud saw it as wish fulfilment — an illusion." },
+      { s:"Bernadette's visions at Lourdes are corporeal visions.", f:false },
+      { s:"An intellectual vision is one seen with the eyes.", f:true, why:"An intellectual vision is inner understanding with no image at all." }
+    ]},
+    { id:"k5", p:"p1ph", title:"Religious language", items:[
+      { s:"Ayer: statements are meaningful only if analytic or empirically verifiable.", f:false },
+      { s:"Flew's gardener parable defends religious language.", f:true, why:"It attacks it — belief 'dies the death of a thousand qualifications'." },
+      { s:"Hare's bliks are unfalsifiable but shape how we live.", f:false },
+      { s:"Hick's eschatological verification means God-talk is verified now.", f:true, why:"It is verified after death — the road to the Celestial City." },
+      { s:"Aquinas: analogy of attribution and analogy of proportion.", f:false },
+      { s:"Tillich said religious symbols are just signs, like traffic lights.", f:true, why:"Symbols participate in what they point to; signs do not." },
+      { s:"Wittgenstein: meaning is use within a language game.", f:false },
+      { s:"The via negativa describes God fully in positive terms.", f:true, why:"It says only what God is not." }
+    ]},
+    { id:"k6", p:"p1ph", title:"Miracles and the afterlife", items:[
+      { s:"Hume: a miracle is a violation of the laws of nature.", f:false },
+      { s:"Wiles believed God performs many small miracles every day.", f:true, why:"Wiles: a God who intervened selectively would be arbitrary — one great miracle of creation." },
+      { s:"Holland's contingency miracle is the boy on the railway line.", f:false },
+      { s:"Descartes was a materialist.", f:true, why:"Descartes was a substance dualist — mind and body distinct." },
+      { s:"Ryle called dualism 'the ghost in the machine'.", f:false },
+      { s:"Hick's replica theory relies on the soul surviving death.", f:true, why:"God creates a replica — no soul is needed." },
+      { s:"Plato thought the soul pre-exists the body.", f:false },
+      { s:"Dawkins believes in an immortal soul.", f:true, why:"Dawkins is a materialist — we are 'survival machines' for genes." }
+    ]},
+    { id:"k7", p:"p1eth", title:"Natural Moral Law and Situation Ethics", items:[
+      { s:"Aquinas' primary precepts include preserving life and worshipping God.", f:false },
+      { s:"Double effect lets you intend a bad outcome if the good outweighs it.", f:true, why:"The bad effect must be foreseen, never intended." },
+      { s:"Proportionalism says a precept may be broken for a proportionate reason.", f:false },
+      { s:"Fletcher said love is one norm among many.", f:true, why:"Love is the ONLY norm — the first proposition." },
+      { s:"Fletcher's working principles: pragmatism, relativism, positivism, personalism.", f:false },
+      { s:"Situation ethics is a deontological theory.", f:true, why:"It is teleological — judged by the loving outcome." },
+      { s:"Secondary precepts are derived by reason from the primary precepts.", f:false },
+      { s:"Aquinas said humans cannot know natural law without the Bible.", f:true, why:"Reason reads it — 'written on their hearts' (Romans 2:14–15)." }
+    ]},
+    { id:"k8", p:"p1eth", title:"Virtue, Bentham and Kant", items:[
+      { s:"Aristotle: virtue is a mean between two vices.", f:false },
+      { s:"Eudaimonia means momentary pleasure.", f:true, why:"Flourishing — living well over a whole life." },
+      { s:"Bentham's hedonic calculus has seven criteria.", f:false },
+      { s:"Mill said all pleasures are equal in value.", f:true, why:"Higher and lower pleasures — 'better Socrates dissatisfied than a fool satisfied'." },
+      { s:"Kant: act only on a maxim you could will to be a universal law.", f:false },
+      { s:"Kant said consequences decide whether an act is right.", f:true, why:"Only the good will acting from duty makes an act right." },
+      { s:"Kant called natural rights 'nonsense upon stilts'.", f:true, why:"That was Bentham." },
+      { s:"Kant: treat people as ends, never merely as means.", f:false }
+    ]},
+    { id:"k9", p:"p1eth", title:"Meta-ethics, free will and conscience", items:[
+      { s:"Moore: 'good' is indefinable, like yellow.", f:false },
+      { s:"The Euthyphro dilemma was invented by Aquinas.", f:true, why:"It comes from Plato's dialogue Euthyphro." },
+      { s:"Hard determinism: every action is caused, so no one is responsible.", f:false },
+      { s:"Compatibilists deny that our actions are caused.", f:true, why:"They accept causation but say 'free' means acting on your own desires." },
+      { s:"Freud: conscience is the superego.", f:false },
+      { s:"Aquinas said conscience is the literal voice of God.", f:true, why:"For Aquinas it is reason applied to action — synderesis and conscientia." },
+      { s:"Kohlberg's post-conventional level reasons from universal principles.", f:false },
+      { s:"Fromm's humanistic conscience is based on fear of authority.", f:true, why:"That is the authoritarian conscience; the humanistic one is our true self." }
+    ]},
+    { id:"k10", p:"p2", title:"Sources and God", items:[
+      { s:"The Bible is 'inspired by God but written by human beings'.", f:false },
+      { s:"Catholics believe scripture alone is the only authority.", f:true, why:"Sola scriptura is Protestant; Catholics add tradition and the Magisterium." },
+      { s:"Jesus said 'I and the Father are one' (John 10:30).", f:false },
+      { s:"Process theology says God is the omnipotent creator from nothing.", f:true, why:"Process theology: God is neither omnipotent nor creator ex nihilo." },
+      { s:"The Trinity is one God in three persons.", f:false },
+      { s:"Boethius said God experiences time moment by moment.", f:true, why:"Boethius: God is eternal — all of time at once." },
+      { s:"Feminist theologians challenge 'Father' as gendered language.", f:false },
+      { s:"Justification by faith alone is the Catholic position.", f:true, why:"Luther's Protestant position; Catholics hold faith and works." }
+    ]},
+    { id:"k11", p:"p2", title:"Afterlife and conduct", items:[
+      { s:"1 Corinthians 15 speaks of a spiritual body.", f:false },
+      { s:"Purgatory is accepted by all Protestant churches.", f:true, why:"Rejected at the Reformation as unbiblical." },
+      { s:"Objective immortality means living on in God's memory.", f:false },
+      { s:"Just war theory forbids all war.", f:true, why:"It sets conditions for a just war — forbidding all war is pacifism." },
+      { s:"Stewardship means caring for creation on God's behalf.", f:false },
+      { s:"Predestination was rejected by Calvin.", f:true, why:"Predestination is central to Calvin's theology." },
+      { s:"Sanctity of life is applied to embryo debates.", f:false },
+      { s:"The Westminster Catechism says the chief end of man is to earn a living.", f:true, why:"To glorify God and enjoy him forever." }
+    ]},
+    { id:"k12", p:"p2", title:"Identity and society", items:[
+      { s:"Baptists practise believer's baptism by full immersion.", f:false },
+      { s:"Catholics view the Eucharist as a memorial only.", f:true, why:"Transubstantiation — Christ is really present." },
+      { s:"The Church of England ordained its first women priests in 1994.", f:false },
+      { s:"Hampson believes Christianity can be reformed for women.", f:true, why:"'Irredeemably sexist' — she is post-Christian." },
+      { s:"Ruether spoke of the androgynous Christ.", f:false },
+      { s:"Polkinghorne said science and religion cannot both be true.", f:true, why:"He argued they are compatible — both seek truth." },
+      { s:"Rahner spoke of 'anonymous Christians'.", f:false },
+      { s:"Hick's pluralism says only Christianity leads to salvation.", f:true, why:"That is exclusivism; Hick says all faiths are valid paths." }
+    ]}
+  ]
+};
+
+</script>
+<script>
+// ================= CORE: store · xp · audio · toast · modal · router · hub =================
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const KEY = 'philarcade_' + COURSE.id;
+const RANKS = [[0,'Novice'],[200,'Apprentice'],[600,'Scholar'],[1500,'Philosopher'],[3000,'Sage'],[6000,'Doctor of the Arcade']];
+
+const DEFAULT = () => ({ xp:0, played:0, sound:true, paper:'all',
+  wordle:{ played:0, won:0, streak:0, maxStreak:0, dist:[0,0,0,0,0,0], lastWinDay:null, daily:{}, recent:[] },
+  conn:{ solved:{} }, drop:{ best:{} }, knock:{ best:{}, done:{} } });
+let S = DEFAULT();
+function load(){ try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw); S = Object.assign(DEFAULT(), o); S.wordle = Object.assign(DEFAULT().wordle, o.wordle||{}); S.conn=Object.assign(DEFAULT().conn,o.conn||{}); S.drop=Object.assign(DEFAULT().drop,o.drop||{}); S.knock=Object.assign(DEFAULT().knock,o.knock||{}); } }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+load();
+
+// ---- helpers ----
+const todayKey = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function rng(seed){ let a=seed>>>0; return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function shuffle(arr, r=Math.random){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const pick = (arr, r=Math.random) => arr[Math.floor(r()*arr.length)];
+const paperOf = id => COURSE.papers.find(p=>p.id===id);
+const inPaper = item => S.paper==='all' || item.p===S.paper;
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---- XP & rank ----
+function rankOf(xp){ let cur=RANKS[0], next=null; for(let i=0;i<RANKS.length;i++){ if(xp>=RANKS[i][0]) cur=RANKS[i]; else { next=RANKS[i]; break; } } return {cur,next}; }
+function renderXP(){ $('#xpVal').textContent=S.xp; const {cur,next}=rankOf(S.xp); $('#rankName').textContent=cur[1];
+  if(next){ const pct=Math.min(100,Math.round(100*(S.xp-cur[0])/(next[0]-cur[0]))); $('#rankBar').style.width=pct+'%'; $('#rankNext').textContent=(next[0]-S.xp)+' XP to '+next[1]; }
+  else { $('#rankBar').style.width='100%'; $('#rankNext').textContent='Top rank reached'; } }
+function addXP(n, label){ if(!n) return; S.xp=Math.max(0,S.xp+n); save(); renderXP(); const pill=$('#xpPill'); pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); if(n>0) toast('+'+n+' XP'+(label?' · '+label:''),'gold'); }
+
+// ---- audio ----
+let AC=null;
+function blip(kind){ if(!S.sound) return; try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume();
+  const now=AC.currentTime; const seq={ tap:[[520,.05]], ok:[[660,.07],[880,.09]], bad:[[220,.12],[180,.14]], win:[[523,.08],[659,.08],[784,.1],[1047,.18]], lose:[[330,.12],[262,.12],[196,.22]], pop:[[900,.04]], land:[[300,.05]], hit:[[150,.08],[110,.1]], launch:[[420,.05],[600,.06]] }[kind]||[[500,.05]];
+  let t=now; for(const [f,d] of seq){ const o=AC.createOscillator(), g=AC.createGain(); o.type=kind==='bad'||kind==='hit'||kind==='lose'?'sawtooth':'triangle'; o.frequency.setValueAtTime(f,t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.12,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+0.02); t+=d*0.85; } }catch(e){} }
+$('#soundBtn').addEventListener('click',()=>{ S.sound=!S.sound; save(); $('#soundBtn').textContent=S.sound?'🔊':'🔇'; if(S.sound) blip('tap'); });
+$('#soundBtn').textContent=S.sound?'🔊':'🔇';
+
+// ---- toast ----
+let toastT=null;
+function toast(msg, kind='', ms=1700){ const t=$('#toast'); t.textContent=msg; t.className='show '+kind; clearTimeout(toastT); toastT=setTimeout(()=>t.className='',ms); }
+
+// ---- modal ----
+function modal({title, html, acts=[]}){ const m=$('#modal'); $('#m-title').textContent=title; $('#m-body').innerHTML=html; const a=$('#m-acts'); a.innerHTML='';
+  acts.forEach(b=>{ const el=document.createElement('button'); el.className='btn'+(b.ghost?' ghost':'')+(b.gold?' gold':''); el.textContent=b.label; el.onclick=()=>{ closeModal(); b.fn&&b.fn(); }; a.appendChild(el); });
+  m.hidden=false; setTimeout(()=>{ const first=a.querySelector('button:last-child'); first&&first.focus(); },30); }
+function closeModal(){ $('#modal').hidden=true; }
+$('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+
+// ---- confetti ----
+const CF=$('#confetti'), cfx=CF.getContext('2d'); let cfParts=[], cfRun=false;
+function confetti(n=140){ if(matchMedia('(prefers-reduced-motion: reduce)').matches) return; CF.width=innerWidth; CF.height=innerHeight; const cols=['#C9A227','#E4C25A','#12294D','#3C7A5A','#B0413E','#86B3E8','#FFFFFF'];
+  for(let i=0;i<n;i++) cfParts.push({x:innerWidth/2+(Math.random()-.5)*200,y:innerHeight*0.35,vx:(Math.random()-.5)*14,vy:-Math.random()*12-4,g:.35,w:6+Math.random()*6,h:8+Math.random()*8,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,c:pick(cols),life:90+Math.random()*50});
+  if(!cfRun){ cfRun=true; requestAnimationFrame(cfTick); } }
+function cfTick(){ cfx.clearRect(0,0,CF.width,CF.height); cfParts=cfParts.filter(p=>p.life>0&&p.y<CF.height+20);
+  for(const p of cfParts){ p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.vx*=.99; p.r+=p.vr; p.life--; cfx.save(); cfx.translate(p.x,p.y); cfx.rotate(p.r); cfx.fillStyle=p.c; cfx.globalAlpha=Math.min(1,p.life/30); cfx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cfx.restore(); }
+  if(cfParts.length) requestAnimationFrame(cfTick); else { cfRun=false; cfx.clearRect(0,0,CF.width,CF.height); } }
+
+// ---- router ----
+const GAMES = {}; // id -> {enter(), leave()}
+let current='hub';
+function go(id){ const prev=current; if(GAMES[prev]&&GAMES[prev].leave) GAMES[prev].leave(); $$('.screen').forEach(s=>s.hidden=true); $('#scr-'+id).hidden=false; current=id; $('#backBtn').hidden=(id==='hub'); window.scrollTo({top:0,behavior:'instant'}); if(id==='hub') renderHub(); else if(GAMES[id]&&GAMES[id].enter) GAMES[id].enter(); }
+$('#backBtn').addEventListener('click',()=>{ blip('tap'); go('hub'); });
+$$('.game[data-go]').forEach(b=>b.addEventListener('click',()=>{ blip('tap'); go(b.dataset.go); }));
+
+// ---- paper filter ----
+function renderChips(){ const c=$('#paperChips'); c.innerHTML=''; const all=[{id:'all',label:'Whole course',col:'#12294D'}].concat(COURSE.papers);
+  all.forEach(p=>{ const b=document.createElement('button'); b.className='chip'+(S.paper===p.id?' on':''); b.style.setProperty('--c',p.col); b.innerHTML='<i></i>'+esc(p.label); b.onclick=()=>{ S.paper=p.id; save(); blip('tap'); renderHub(); }; c.appendChild(b); }); }
+
+// ---- hub ----
+function renderHub(){ renderXP(); renderChips();
+  const t=COURSE.terms.filter(inPaper).length, cn=COURSE.connections.filter(inPaper), dr=COURSE.drop.filter(inPaper).length, ko=COURSE.knockout.filter(inPaper);
+  $('#mWordle').textContent=t+' terms'; $('#mConnect').textContent=cn.length+' puzzles · '+cn.filter(c=>S.conn.solved[c.id]).length+' solved'; $('#mDrop').textContent=dr+' sets'; $('#mKnock').textContent=ko.length+' rounds · '+ko.filter(k=>S.knock.done[k.id]).length+' cleared';
+  $('#poolNote').textContent=S.paper==='all'?'Drawing on the whole course':'Drawing on '+paperOf(S.paper).label;
+  $('#stStreak').textContent=S.wordle.streak; $('#stPlayed').textContent=S.played; $('#stSolved').textContent=Object.keys(S.conn.solved).length+Object.keys(S.knock.done).length+S.wordle.won; }
+function bumpPlayed(){ S.played++; save(); }
+renderHub();
+
+</script>
+<script>
+// ================= GAME 1 · KEY TERM (Wordle-style) =================
+(function(){
+  const W = { mode:'daily', term:null, len:0, row:0, cur:'', guesses:[], done:false, won:false, keys:{}, hints:0 };
+  const grid=$('#w-grid'), kbd=$('#w-kbd');
+  const ROWS=['QWERTYUIOP','ASDFGHJKL','ENTER,Z,X,C,V,B,N,M,⌫'];
+
+  function pool(){ const p=COURSE.terms.filter(inPaper); return p.length?p:COURSE.terms; }
+  function dailyTerm(){ const day=todayKey(); const idx=hashStr('kt-'+day)%COURSE.terms.length; return COURSE.terms[idx]; }
+  function practiceTerm(){ const p=pool().filter(t=>!S.wordle.recent.includes(t.t)); return pick(p.length?p:pool()); }
+
+  function start(mode){ W.mode=mode; $('#w-daily').classList.toggle('on',mode==='daily'); $('#w-practice').classList.toggle('on',mode==='practice'); $('#w-new').hidden=(mode==='daily');
+    W.row=0; W.cur=''; W.guesses=[]; W.done=false; W.won=false; W.keys={}; W.hints=0;
+    if(mode==='daily'){ W.term=dailyTerm(); const d=S.wordle.daily[todayKey()]; if(d){ W.guesses=d.guesses.slice(); W.row=W.guesses.length; W.done=d.done; W.won=d.won; W.hints=d.hints||0; W.guesses.forEach(g=>evaluate(g).forEach((st,i)=>mark(g[i],st))); } }
+    else { W.term=practiceTerm(); }
+    W.len=W.term.t.length;
+    $('#w-sub').textContent = mode==='daily' ? 'Today’s term · '+new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}) : 'Practice · '+(S.paper==='all'?'whole course':paperOf(S.paper).label);
+    $('#w-clue').textContent=W.term.clue; $('#w-paper').textContent=paperOf(W.term.p).label; $('#w-topic').hidden=!(W.hints>=1); $('#w-topic').textContent='Topic: '+W.term.topic; $('#w-hint').disabled=W.done||W.hints>=2; $('#w-hint').textContent=W.hints===0?'Hint: topic (−5 XP)':W.hints===1?'Hint: first letter (−5 XP)':'No more hints';
+    renderGrid(); renderKbd(); if(W.done) setTimeout(()=>finish(true),150); }
+
+  function renderGrid(){ grid.innerHTML=''; const cell=Math.min(58,Math.floor((Math.min(innerWidth,520)-40-6*(W.len-1))/W.len)); grid.style.gridTemplateColumns='1fr';
+    for(let r=0;r<6;r++){ const row=document.createElement('div'); row.className='w-row'; row.style.gridTemplateColumns=`repeat(${W.len},${cell}px)`; row.dataset.r=r;
+      for(let c=0;c<W.len;c++){ const d=document.createElement('div'); d.className='cell'; if(r<W.guesses.length){ const g=W.guesses[r]; const st=evaluate(g)[c]; d.textContent=g[c]; d.classList.add(st); } else if(r===W.row&&!W.done){ if(W.cur[c]){ d.textContent=W.cur[c]; d.classList.add('filled'); } else if(W.hints>=2&&c===0){ d.textContent=W.term.t[0]; d.style.color='#9aa'; } }
+        row.appendChild(d); } grid.appendChild(row); } }
+  function renderKbd(){ kbd.innerHTML=''; ROWS.forEach((r,i)=>{ const row=document.createElement('div'); row.className='krow'; const keys=i===2?r.split(','):r.split(''); keys.forEach(k=>{ const b=document.createElement('button'); b.className='key'+(k.length>1?' wide':'')+(W.keys[k]?' '+W.keys[k]:''); b.textContent=k; b.dataset.k=k; b.onclick=()=>press(k); row.appendChild(b); }); kbd.appendChild(row); }); }
+  function mark(ch,st){ const rank={absent:1,present:2,correct:3}; if((rank[st]||0)>(rank[W.keys[ch]]||0)) W.keys[ch]=st; }
+
+  function evaluate(g){ const t=W.term.t, res=Array(W.len).fill('absent'), left={}; for(let i=0;i<W.len;i++){ if(g[i]===t[i]) res[i]='correct'; else left[t[i]]=(left[t[i]]||0)+1; }
+    for(let i=0;i<W.len;i++){ if(res[i]!=='correct'&&left[g[i]]>0){ res[i]='present'; left[g[i]]--; } } return res; }
+
+  function press(k){ if(W.done||current!=='wordle') return; if(k==='ENTER'||k==='Enter') return submit(); if(k==='⌫'||k==='Backspace'){ W.cur=W.cur.slice(0,-1); renderRow(); return; }
+    if(/^[A-Z]$/i.test(k)&&W.cur.length<W.len){ W.cur+=k.toUpperCase(); blip('tap'); renderRow(); } }
+  function renderRow(){ const row=grid.children[W.row]; if(!row) return; Array.from(row.children).forEach((d,c)=>{ d.className='cell'; d.style.color=''; if(W.cur[c]){ d.textContent=W.cur[c]; d.classList.add('filled'); } else if(W.hints>=2&&c===0){ d.textContent=W.term.t[0]; d.style.color='#9aa'; } else d.textContent=''; }); }
+  function submit(){ if(W.cur.length<W.len){ const row=grid.children[W.row]; row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); toast('Not enough letters'); blip('bad'); return; }
+    const g=W.cur; const res=evaluate(g); const row=grid.children[W.row]; W.guesses.push(g); W.cur='';
+    Array.from(row.children).forEach((d,i)=>{ setTimeout(()=>{ d.classList.add('flip'); setTimeout(()=>{ d.classList.add(res[i]); mark(g[i],res[i]); renderKbd(); },250); }, i*160); });
+    const won=res.every(s=>s==='correct'); W.row++;
+    setTimeout(()=>{ if(won){ W.done=true; W.won=true; finish(false); } else if(W.row>=6){ W.done=true; W.won=false; finish(false); } else { renderRow(); if(W.mode==='daily') persistDaily(); } }, W.len*160+300); }
+
+  function persistDaily(){ S.wordle.daily[todayKey()]={guesses:W.guesses.slice(),done:W.done,won:W.won,hints:W.hints}; save(); }
+
+  function finish(restored){ $('#w-hint').disabled=true; if(!restored){ bumpPlayed(); S.wordle.played++; if(W.mode==='daily') persistDaily(); if(W.mode==='practice'){ S.wordle.recent=[W.term.t].concat(S.wordle.recent).slice(0,12); }
+      if(W.won){ S.wordle.won++; S.wordle.dist[W.row-1]++; const day=todayKey(); if(W.mode==='daily'){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); S.wordle.streak = (S.wordle.lastWinDay===yk)? S.wordle.streak+1 : (S.wordle.lastWinDay===day? S.wordle.streak : 1); S.wordle.lastWinDay=day; S.wordle.maxStreak=Math.max(S.wordle.maxStreak,S.wordle.streak); }
+        save(); const xp=(7-W.row)*15+10+(W.mode==='daily'?20:0); blip('win'); confetti(); setTimeout(()=>addXP(xp,'Key Term'),300); }
+      else { S.wordle.streak = W.mode==='daily' ? 0 : S.wordle.streak; save(); blip('lose'); } }
+    const t=W.term; const verdict = W.won ? ['Genius','Magnificent','Impressive','Splendid','Great','Phew'][W.row-1] : 'Not this time';
+    modal({ title: verdict, html: `<div class="term">${esc(t.t)}</div><div>${esc(t.clue)}</div><div class="kv"><span>Topic</span><b>${esc(t.topic)}</b><span>Paper</span><b>${esc(paperOf(t.p).label)}</b></div>${W.won?'':'<div class="why">Say it, write it, use it in a sentence — then come back tomorrow.</div>'}`,
+      acts: W.mode==='daily' ? [{label:'Practice more',ghost:true,fn:()=>start('practice')},{label:'Back to arcade',fn:()=>go('hub')}] : [{label:'Back to arcade',ghost:true,fn:()=>go('hub')},{label:'Next word ▶',gold:true,fn:()=>start('practice')}] }); }
+
+  function hint(){ if(W.done||W.hints>=2) return; W.hints++; addXP(-5); blip('pop'); if(W.hints===1){ $('#w-topic').hidden=false; $('#w-hint').textContent='Hint: first letter (−5 XP)'; } else { $('#w-hint').textContent='No more hints'; $('#w-hint').disabled=true; renderRow(); } if(W.mode==='daily') persistDaily(); }
+
+  function stats(){ const w=S.wordle; const max=Math.max(1,...w.dist); const dist=w.dist.map((n,i)=>`<div><span>${i+1}</span><i style="width:${Math.max(8,Math.round(100*n/max))}%">${n}</i></div>`).join('');
+    modal({title:'Key Term stats', html:`<div class="kv"><span>Played</span><b>${w.played}</b><span>Won</span><b>${w.won} (${w.played?Math.round(100*w.won/w.played):0}%)</b><span>Current streak</span><b>${w.streak} day${w.streak===1?'':'s'}</b><span>Best streak</span><b>${w.maxStreak}</b></div><div style="margin-top:12px;font-weight:700">Guess distribution</div><div class="dist">${dist}</div>`, acts:[{label:'Close'}]}); }
+
+  $('#w-daily').onclick=()=>{ blip('tap'); start('daily'); }; $('#w-practice').onclick=()=>{ blip('tap'); start('practice'); };
+  $('#w-new').onclick=()=>{ blip('tap'); start('practice'); }; $('#w-hint').onclick=hint; $('#w-stats').onclick=stats;
+  document.addEventListener('keydown',e=>{ if(current!=='wordle'||!$('#modal').hidden) return; if(e.key==='Enter'||e.key==='Backspace'||/^[a-zA-Z]$/.test(e.key)){ e.preventDefault(); press(e.key); } });
+  window.addEventListener('resize',()=>{ if(current==='wordle') { renderGrid(); } });
+  GAMES.wordle={ enter(){ start(S.wordle.daily[todayKey()]&&S.wordle.daily[todayKey()].done?'practice':'daily'); }, leave(){} };
+})();
+
+// ================= GAME 2 · SORT SIXTEEN (Connections-style) =================
+(function(){
+  const TIER=['var(--t0)','var(--t1)','var(--t2)','var(--t3)'];
+  const C = { puzzle:null, tiles:[], sel:new Set(), solved:[], mistakes:0, tried:new Set(), done:false };
+  const grid=$('#cn-grid'), solvedBox=$('#cn-solved');
+
+  function renderList(){ const list=$('#cn-list'); list.innerHTML=''; const pz=COURSE.connections.filter(inPaper);
+    if(!pz.length){ list.innerHTML='<p class="help">No puzzles for this paper yet.</p>'; return; }
+    pz.forEach(p=>{ const b=document.createElement('button'); b.className='row'; b.style.setProperty('--c',paperOf(p.p).col); const done=S.conn.solved[p.id];
+      b.innerHTML=`<span class="tag">${esc(paperOf(p.p).label.replace('Paper ','P').replace(' · ',' '))}</span><b>${esc(p.title)}</b>${done?`<span class="done">✓ solved${done.perfect?' · perfect':''}</span>`:'<span class="best">4 groups</span>'}`;
+      b.onclick=()=>{ blip('tap'); startPuzzle(p); }; list.appendChild(b); }); }
+
+  function startPuzzle(p){ C.puzzle=p; C.sel=new Set(); C.solved=[]; C.mistakes=0; C.tried=new Set(); C.done=false;
+    C.tiles=shuffle(p.groups.flatMap((g,gi)=>g.items.map(t=>({t,g:gi}))));
+    $('#cn-pick').hidden=true; $('#cn-board').hidden=false; $('#cn-title').textContent=p.title; $('#cn-sub').textContent=paperOf(p.p).label+' · four groups of four';
+    solvedBox.innerHTML=''; renderGrid(); renderLives(); }
+  function renderGrid(){ grid.innerHTML=''; C.tiles.forEach((tile,i)=>{ const b=document.createElement('button'); b.className='tile'+(tile.t.length>14?' long':'')+(tile.t.length>20?' xlong':'')+(C.sel.has(i)?' sel':''); b.textContent=tile.t; b.onclick=()=>toggle(i,b); grid.appendChild(b); }); $('#cn-submit').disabled=C.sel.size!==4; }
+  function toggle(i,b){ if(C.done) return; if(C.sel.has(i)){ C.sel.delete(i); b.classList.remove('sel'); } else { if(C.sel.size>=4) return; C.sel.add(i); b.classList.add('sel'); } blip('tap'); $('#cn-submit').disabled=C.sel.size!==4; }
+  function renderLives(){ $$('#cn-lives i').forEach((d,i)=>d.classList.toggle('off',i<C.mistakes)); }
+
+  function submit(){ if(C.sel.size!==4||C.done) return; const idx=Array.from(C.sel); const key=idx.map(i=>C.tiles[i].t).sort().join('|');
+    if(C.tried.has(key)){ toast('Already tried that'); blip('bad'); return; } C.tried.add(key);
+    const counts={}; idx.forEach(i=>{ const g=C.tiles[i].g; counts[g]=(counts[g]||0)+1; }); const best=Math.max(...Object.values(counts));
+    if(best===4){ const g=C.tiles[idx[0]].g; solveGroup(g); return; }
+    C.mistakes++; renderLives(); blip('bad'); const tiles=$$('.tile.sel'); tiles.forEach(t=>{ t.classList.remove('bounce'); void t.offsetWidth; t.classList.add('bounce'); });
+    if(C.mistakes>=4){ lose(); return; }
+    toast(best===3?'One away…':'Not a group', best===3?'gold':'bad'); }
+
+  function solveGroup(g){ const gr=C.puzzle.groups[g]; C.solved.push(g); C.tiles=C.tiles.filter(t=>t.g!==g); C.sel=new Set(); blip('ok');
+    const div=document.createElement('div'); div.className='cn-group'; div.style.background=TIER[g]; div.innerHTML=`<b>${esc(gr.name)}</b><span>${gr.items.map(esc).join(', ')}</span><small>${esc(gr.why)}</small>`; solvedBox.appendChild(div); renderGrid();
+    if(C.solved.length===4) win(); }
+  function win(){ C.done=true; bumpPlayed(); const perfect=C.mistakes===0; S.conn.solved[C.puzzle.id]={perfect, when:todayKey()}; save(); const xp=60+(4-C.mistakes)*15; blip('win'); confetti(); setTimeout(()=>addXP(xp,'Sort Sixteen'),300);
+    const next=COURSE.connections.filter(inPaper).find(p=>!S.conn.solved[p.id]);
+    setTimeout(()=>modal({title:perfect?'Perfect!':C.mistakes===1?'Excellent':'Solved', html:`<div>You found all four groups in <b>${C.puzzle.title}</b> with ${C.mistakes} mistake${C.mistakes===1?'':'s'}.</div><div class="why">Revision move: cover the answers and say <em>why</em> each group belongs together — that "why" is the AO1 point in an exam answer.</div>`,
+      acts:[{label:'All puzzles',ghost:true,fn:backToList}, next?{label:'Next puzzle ▶',gold:true,fn:()=>startPuzzle(next)}:{label:'Back to arcade',fn:()=>go('hub')}]}),700); }
+  function lose(){ C.done=true; bumpPlayed(); save(); blip('lose'); const remaining=C.puzzle.groups.map((g,i)=>i).filter(i=>!C.solved.includes(i));
+    remaining.forEach(g=>{ const gr=C.puzzle.groups[g]; const div=document.createElement('div'); div.className='cn-group'; div.style.background=TIER[g]; div.style.opacity='.85'; div.innerHTML=`<b>${esc(gr.name)}</b><span>${gr.items.map(esc).join(', ')}</span><small>${esc(gr.why)}</small>`; solvedBox.appendChild(div); });
+    C.tiles=[]; renderGrid();
+    setTimeout(()=>modal({title:'Out of mistakes', html:`<div>Here are the groups you were looking for — read the "why" lines, then try again.</div>`, acts:[{label:'All puzzles',ghost:true,fn:backToList},{label:'Try again',gold:true,fn:()=>startPuzzle(C.puzzle)}]}),500); }
+  function backToList(){ $('#cn-board').hidden=true; $('#cn-pick').hidden=false; renderList(); }
+
+  $('#cn-submit').onclick=submit; $('#cn-shuffle').onclick=()=>{ if(C.done) return; const selT=new Set(Array.from(C.sel).map(i=>C.tiles[i].t)); C.tiles=shuffle(C.tiles); C.sel=new Set(C.tiles.map((t,i)=>selT.has(t.t)?i:-1).filter(i=>i>=0)); renderGrid(); blip('tap'); };
+  $('#cn-clear').onclick=()=>{ C.sel=new Set(); renderGrid(); }; $('#cn-back').onclick=backToList;
+  $('#cn-random').onclick=()=>{ const pz=COURSE.connections.filter(inPaper); const un=pz.filter(p=>!S.conn.solved[p.id]); const p=pick(un.length?un:pz); if(p){ blip('tap'); startPuzzle(p); } };
+  GAMES.connect={ enter(){ $('#cn-board').hidden=true; $('#cn-pick').hidden=false; renderList(); }, leave(){} };
+})();
+
+// ================= GAME 3 · CONCEPT DROP (Tetris-style) =================
+(function(){
+  const LW=520, LH=440, COLS=4, ROWS=8, colW=LW/COLS, rowH=LH/ROWS;
+  const cv=$('#dr-canvas'), ctx=cv.getContext('2d');
+  const D = { set:null, running:false, paused:false, over:false, score:0, level:1, streak:0, correct:0, stacks:[[],[],[],[]], block:null, queue:[], next:null, fx:[], soft:false, last:0, raf:0, flashCol:-1, flashKind:'', flashT:0 };
+
+  function fitCanvas(){ const dpr=Math.min(2,window.devicePixelRatio||1); cv.width=LW*dpr; cv.height=LH*dpr; cv.style.height='auto'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+
+  function renderList(){ const list=$('#dr-list'); list.innerHTML=''; const sets=COURSE.drop.filter(inPaper); if(!sets.length){ list.innerHTML='<p class="help">No sets for this paper yet.</p>'; return; }
+    sets.forEach(s=>{ const b=document.createElement('button'); b.className='row'; b.style.setProperty('--c',paperOf(s.p).col); const best=S.drop.best[s.id]||0;
+      b.innerHTML=`<span class="tag">${esc(paperOf(s.p).label.replace('Paper ','P').replace(' · ',' '))}</span><b>${esc(s.title)}<br><small style="font-weight:400;color:var(--muted)">${s.cols.map(esc).join(' · ')}</small></b><span class="best">${best?'Best '+best:s.items.length+' concepts'}</span>`;
+      b.onclick=()=>{ blip('tap'); startSet(s); }; list.appendChild(b); }); }
+
+  function startSet(s){ D.set=s; D.score=0; D.level=1; D.streak=0; D.correct=0; D.stacks=[[],[],[],[]]; D.fx=[]; D.over=false; D.paused=false; D.queue=[]; D.block=null; D.next=null;
+    $('#dr-pick').hidden=true; $('#dr-game').hidden=false; $('#dr-title').textContent=s.title; const cols=$('#dr-cols'); cols.innerHTML=''; s.cols.forEach(c=>{ const d=document.createElement('div'); d.textContent=c; cols.appendChild(d); });
+    fitCanvas(); hud(); spawn(); D.running=true; D.last=performance.now(); cancelAnimationFrame(D.raf); D.raf=requestAnimationFrame(loop); }
+  function hud(){ $('#dr-score').textContent=D.score; $('#dr-level').textContent=D.level; $('#dr-streak').textContent=D.streak; $('#dr-next').textContent=D.next?D.next[0]:'—'; $('#dr-pause').textContent=D.paused?'Resume':'Pause'; }
+  function draw1(){ if(!D.queue.length){ let q=shuffle(D.set.items); if(D.block&&q[0]&&q[0][0]===D.block.label) q.push(q.shift()); D.queue=q; } return D.queue.shift(); }
+  function spawn(){ const it=D.next||draw1(); D.next=draw1(); D.block={label:it[0], c:it[1], col:1+Math.floor(Math.random()*2), y:-rowH, landed:false}; hud(); }
+  function floorY(col){ return LH-D.stacks[col].length*rowH; }
+  function speed(){ return (D.soft?380:0) + 42 + (D.level-1)*16; }
+
+  function move(dir){ if(!D.block||D.over||D.paused) return; const n=D.block.col+dir; if(n<0||n>=COLS) return; if(D.block.y+rowH>floorY(n)) { blip('bad'); return; } D.block.col=n; blip('tap'); }
+  function hardDrop(){ if(!D.block||D.over||D.paused) return; D.block.y=floorY(D.block.col)-rowH; land(); }
+  function land(){ const b=D.block; if(!b) return; const col=b.col; b.landed=true; const ok=col===b.c; D.flashCol=col; D.flashKind=ok?'hit':'miss'; D.flashT=0.5;
+    if(ok){ D.correct++; D.streak++; const pts=10*D.level+(D.streak>=3?5:0); D.score+=pts; blip('ok'); addFx('+'+pts, col, floorY(col)-rowH/2, '#3C7A5A'); burst(col, floorY(col)-rowH/2);
+      if(D.streak%5===0){ const tallest=D.stacks.reduce((m,s,i)=>s.length>D.stacks[m].length?i:m,0); if(D.stacks[tallest].length){ D.stacks[tallest].pop(); toast('Streak ×5 — one mistake cleared','good'); blip('pop'); } }
+      if(D.correct%8===0){ D.level++; toast('Level '+D.level+' — faster!','gold'); } }
+    else { D.streak=0; D.stacks[col].push({label:b.label, c:b.c}); blip('land'); toast('✗ '+b.label+' → '+D.set.cols[b.c],'bad',2200); if(D.stacks[col].length>=ROWS){ gameOver(); return; } }
+    D.block=null; hud(); setTimeout(()=>{ if(!D.over&&D.running) spawn(); }, 140); }
+  function addFx(text,col,y,color){ D.fx.push({text,x:col*colW+colW/2,y,vy:-40,life:1,color}); }
+  function burst(col,y){ for(let i=0;i<14;i++) D.fx.push({p:true,x:col*colW+colW/2,y,vx:(Math.random()-.5)*220,vy:-Math.random()*160-40,life:.8,color:Math.random()<.5?'#C9A227':'#12294D'}); }
+
+  function gameOver(){ D.over=true; D.running=false; bumpPlayed(); const best=S.drop.best[D.set.id]||0; const nb=Math.max(best,D.score); S.drop.best[D.set.id]=nb; save(); blip('lose'); draw();
+    const xp=Math.min(200,Math.round(D.score/4)); if(xp) setTimeout(()=>addXP(xp,'Concept Drop'),300);
+    const wrong=D.stacks.flat(); const list=wrong.slice(-6).map(w=>`<li><b>${esc(w.label)}</b> → ${esc(D.set.cols[w.c])}</li>`).join('');
+    setTimeout(()=>modal({title:'The well is full', html:`<div class="kv"><span>Score</span><b>${D.score}</b><span>Best</span><b>${nb}${D.score>=nb&&D.score>best?' · new best!':''}</b><span>Level</span><b>${D.level}</b><span>Correct drops</span><b>${D.correct}</b></div>${wrong.length?`<div class="why"><b>Where those belonged:</b><ul style="margin:6px 0 0;padding-left:18px">${list}</ul></div>`:''}`,
+      acts:[{label:'All sets',ghost:true,fn:backToList},{label:'Play again',gold:true,fn:()=>startSet(D.set)}]}),600); }
+  function backToList(){ D.running=false; cancelAnimationFrame(D.raf); $('#dr-game').hidden=true; $('#dr-pick').hidden=false; renderList(); }
+  function togglePause(force){ if(D.over) return; D.paused=force!==undefined?force:!D.paused; hud(); if(!D.paused){ D.last=performance.now(); cancelAnimationFrame(D.raf); D.raf=requestAnimationFrame(loop); } else draw(); }
+
+  function loop(t){ if(!D.running) return; const dt=Math.min(0.05,(t-D.last)/1000); D.last=t; if(!D.paused) step(dt); draw(); if(!D.paused) D.raf=requestAnimationFrame(loop); }
+  function step(dt){ const b=D.block; if(b&&!b.landed){ b.y+=speed()*dt; if(b.y+rowH>=floorY(b.col)){ b.y=floorY(b.col)-rowH; land(); } }
+    D.fx=D.fx.filter(f=>f.life>0); for(const f of D.fx){ f.life-=dt*(f.p?1.3:0.9); if(f.p){ f.vy+=600*dt; f.x+=f.vx*dt; f.y+=f.vy*dt; } else f.y+=f.vy*dt; }
+    if(D.flashT>0) D.flashT-=dt; const hs=$$('#dr-cols div'); hs.forEach((h,i)=>{ h.className=(i===D.flashCol&&D.flashT>0)?D.flashKind:''; }); }
+
+  function wrap(text,maxW){ const words=text.split(' '); const lines=[]; let cur=''; for(const w of words){ const t=cur?cur+' '+w:w; if(ctx.measureText(t).width<=maxW||!cur) cur=t; else { lines.push(cur); cur=w; } } if(cur) lines.push(cur); return lines; }
+  function drawBlock(x,y,label,fill,stroke,textCol,sub){ const w=colW-8,h=rowH-6; ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=2; roundRect(x+4,y+3,w,h,8); ctx.fill(); ctx.stroke();
+    let size=sub?13:15; let lines; do{ ctx.font='700 '+size+'px '+getComputedStyle(document.body).fontFamily; lines=wrap(label,w-12); size--; } while((lines.length>2||lines.some(l=>ctx.measureText(l).width>w-12))&&size>9);
+    ctx.fillStyle=textCol; ctx.textAlign='center'; ctx.textBaseline='middle'; const lh=size+3; const startY=y+3+h/2-(lines.length-1)*lh/2-(sub?6:0); lines.forEach((l,i)=>ctx.fillText(l,x+colW/2,startY+i*lh));
+    if(sub){ ctx.font='400 10px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle='#B0413E'; ctx.fillText('→ '+sub, x+colW/2, y+3+h-9); } }
+  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function draw(){ ctx.clearRect(0,0,LW,LH); ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,LW,LH);
+    ctx.strokeStyle='#F1EADA'; ctx.lineWidth=1; for(let r=1;r<ROWS;r++){ ctx.beginPath(); ctx.moveTo(0,r*rowH); ctx.lineTo(LW,r*rowH); ctx.stroke(); }
+    for(let c=1;c<COLS;c++){ ctx.beginPath(); ctx.moveTo(c*colW,0); ctx.lineTo(c*colW,LH); ctx.strokeStyle='#E6DCC6'; ctx.stroke(); }
+    if(D.flashT>0&&D.flashCol>=0){ ctx.fillStyle=D.flashKind==='hit'?'rgba(60,122,90,'+(D.flashT*0.35)+')':'rgba(176,65,62,'+(D.flashT*0.35)+')'; ctx.fillRect(D.flashCol*colW,0,colW,LH); }
+    D.stacks.forEach((st,c)=>st.forEach((blk,i)=>drawBlock(c*colW, LH-(i+1)*rowH, blk.label, '#F6E3E2', '#B0413E', '#12294D', D.set.cols[blk.c])));
+    const b=D.block; if(b&&!b.landed){ const gy=floorY(b.col)-rowH; ctx.setLineDash([6,5]); ctx.strokeStyle='#C9A227'; ctx.lineWidth=2; roundRect(b.col*colW+4,gy+3,colW-8,rowH-6,8); ctx.stroke(); ctx.setLineDash([]); drawBlock(b.col*colW, b.y, b.label, '#E4C25A', '#12294D', '#12294D'); }
+    for(const f of D.fx){ ctx.globalAlpha=Math.max(0,Math.min(1,f.life)); if(f.p){ ctx.fillStyle=f.color; ctx.fillRect(f.x-4,f.y-4,8,8); } else { ctx.font='900 20px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle=f.color; ctx.textAlign='center'; ctx.fillText(f.text,f.x,f.y); } ctx.globalAlpha=1; }
+    if(D.paused&&!D.over){ ctx.fillStyle='rgba(18,41,77,.55)'; ctx.fillRect(0,0,LW,LH); ctx.fillStyle='#fff'; ctx.font='900 30px '+getComputedStyle(document.body).fontFamily; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Paused',LW/2,LH/2-14); ctx.font='400 15px '+getComputedStyle(document.body).fontFamily; ctx.fillText('Press Resume or P',LW/2,LH/2+18); }
+    if(D.over){ ctx.fillStyle='rgba(176,65,62,.18)'; ctx.fillRect(0,0,LW,LH); } }
+
+  // controls
+  $$('.dr-ctl button').forEach(b=>{ const k=b.dataset.k; if(k==='down'){ b.addEventListener('pointerdown',e=>{ e.preventDefault(); D.soft=true; }); ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>D.soft=false)); }
+    else b.addEventListener('click',()=>{ if(k==='left') move(-1); else if(k==='right') move(1); else if(k==='drop') hardDrop(); }); });
+  document.addEventListener('keydown',e=>{ if(current!=='drop'||$('#dr-game').hidden||!$('#modal').hidden) return; if(e.key==='ArrowLeft'){ e.preventDefault(); move(-1); } else if(e.key==='ArrowRight'){ e.preventDefault(); move(1); } else if(e.key==='ArrowDown'){ e.preventDefault(); D.soft=true; } else if(e.key===' '||e.key==='ArrowUp'){ e.preventDefault(); hardDrop(); } else if(e.key==='p'||e.key==='P'){ togglePause(); } });
+  document.addEventListener('keyup',e=>{ if(e.key==='ArrowDown') D.soft=false; });
+  let px=0,py=0,pt=0; cv.addEventListener('pointerdown',e=>{ px=e.clientX; py=e.clientY; pt=Date.now(); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerup',e=>{ const dx=e.clientX-px, dy=e.clientY-py; if(D.paused){ togglePause(false); return; } if(Math.abs(dx)>28&&Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1); else if(dy>40) hardDrop(); else if(Date.now()-pt<250){ const r=cv.getBoundingClientRect(); move(e.clientX-r.left<r.width/2?-1:1); } });
+  $('#dr-pause').onclick=()=>togglePause();
+  window.addEventListener('resize',()=>{ if(current==='drop'&&!$('#dr-game').hidden){ fitCanvas(); draw(); } });
+  GAMES.drop={ _D:D, enter(){ $('#dr-game').hidden=true; $('#dr-pick').hidden=false; renderList(); }, leave(){ if(D.running&&!D.over) togglePause(true); D.running=false; cancelAnimationFrame(D.raf); } };
+})();
+
+// ================= GAME 4 · KNOCK-OUT (slingshot) =================
+(function(){
+  const LW=720, LH=380, GROUND=334, G=880, R=13, ANCHOR={x:120,y:268}, MAXPULL=92, K=9.5;
+  const COLX=[360,480,600], CW=108, CH=48, LAYOUT=[3,3,2];
+  const cv=$('#ko-canvas'), ctx=cv.getContext('2d');
+  const KO = { round:null, crates:[], order:[], bird:null, state:'rest', shots:7, hearts:3, score:0, left:4, fx:[], hitSet:new Set(), raf:0, running:false, done:false, last:0, drag:null, flyT:0 };
+
+  function fitCanvas(){ const dpr=Math.min(2,window.devicePixelRatio||1); cv.width=LW*dpr; cv.height=LH*dpr; cv.style.height='auto'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  const font=(w,s)=>w+' '+s+'px '+getComputedStyle(document.body).fontFamily;
+
+  function renderList(){ const list=$('#ko-list'); list.innerHTML=''; const rs=COURSE.knockout.filter(inPaper); if(!rs.length){ list.innerHTML='<p class="help">No rounds for this paper yet.</p>'; return; }
+    rs.forEach(r=>{ const b=document.createElement('button'); b.className='row'; b.style.setProperty('--c',paperOf(r.p).col); const d=S.knock.done[r.id];
+      b.innerHTML=`<span class="tag">${esc(paperOf(r.p).label.replace('Paper ','P').replace(' · ',' '))}</span><b>${esc(r.title)}</b>${d?`<span class="done">✓ cleared · ${d.score}</span>`:'<span class="best">8 statements</span>'}`;
+      b.onclick=()=>{ blip('tap'); startRound(r); }; list.appendChild(b); }); }
+
+  function startRound(r){ KO.round=r; KO.order=shuffle(r.items.map((it,i)=>({...it,i}))); KO.shots=7; KO.hearts=3; KO.score=0; KO.fx=[]; KO.done=false; KO.hitSet=new Set(); KO.state='rest';
+    KO.crates=[]; let k=0; LAYOUT.forEach((n,c)=>{ for(let j=0;j<n;j++){ const st=KO.order[k]; KO.crates.push({n:k+1, st, col:c, x:COLX[c], y:GROUND-CH*(j+1), w:CW, h:CH, alive:true, vy:0, flash:0, shake:0}); k++; } });
+    KO.left=KO.order.filter(s=>s.f).length; resetBird();
+    $('#ko-pick').hidden=true; $('#ko-game').hidden=false; $('#ko-title').textContent=r.title; renderItems(); hud(); fitCanvas(); KO.running=true; KO.last=performance.now(); cancelAnimationFrame(KO.raf); KO.raf=requestAnimationFrame(loop); }
+  function resetBird(){ KO.bird={x:ANCHOR.x,y:ANCHOR.y,vx:0,vy:0}; KO.state='rest'; KO.spent=false; KO.hitSet=new Set(); KO.flyT=0; }
+  function hud(){ $('#ko-shots').textContent=KO.shots; $('#ko-score').textContent=KO.score; $('#ko-left').textContent=KO.left; $('#ko-hearts').textContent='♥'.repeat(KO.hearts)+'♡'.repeat(3-KO.hearts); }
+  function renderItems(){ const box=$('#ko-items'); box.innerHTML=''; KO.order.forEach((st,k)=>{ const d=document.createElement('div'); d.className='ko-item'; d.id='ko-i'+k; d.innerHTML=`<span class="n">${k+1}</span><div>${esc(st.s)}<small></small></div>`; box.appendChild(d); }); }
+  function markItem(k,cls,note){ const d=$('#ko-i'+k); if(!d) return; d.classList.add(cls); if(note) d.querySelector('small').textContent=note; }
+
+  // ---- pointer ----
+  function toLocal(e){ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*(LW/r.width), y:(e.clientY-r.top)*(LH/r.height)}; }
+  cv.addEventListener('pointerdown',e=>{ if(KO.done||KO.state!=='rest') return; const p=toLocal(e); const d=Math.hypot(p.x-KO.bird.x,p.y-KO.bird.y); if(d<48){ KO.state='drag'; cv.setPointerCapture(e.pointerId); e.preventDefault(); dragTo(p); } });
+  cv.addEventListener('pointermove',e=>{ if(KO.state!=='drag') return; dragTo(toLocal(e)); });
+  function dragTo(p){ let dx=p.x-ANCHOR.x, dy=p.y-ANCHOR.y; const d=Math.hypot(dx,dy); if(d>MAXPULL){ dx*=MAXPULL/d; dy*=MAXPULL/d; } KO.bird.x=ANCHOR.x+dx; KO.bird.y=ANCHOR.y+dy; }
+  function release(){ if(KO.state!=='drag') return; const dx=ANCHOR.x-KO.bird.x, dy=ANCHOR.y-KO.bird.y; if(Math.hypot(dx,dy)<14){ KO.bird.x=ANCHOR.x; KO.bird.y=ANCHOR.y; KO.state='rest'; return; }
+    KO.bird.vx=dx*K; KO.bird.vy=dy*K; KO.state='fly'; KO.shots--; KO.flyT=0; hud(); blip('launch'); }
+  ['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,release));
+  cv.addEventListener('pointerleave',()=>{ if(KO.state==='drag') release(); });
+
+  // ---- loop ----
+  function loop(t){ if(!KO.running) return; const dt=Math.min(0.04,(t-KO.last)/1000); KO.last=t; step(dt); draw(); KO.raf=requestAnimationFrame(loop); }
+  function step(dt){
+    if(KO.state==='fly'){ const b=KO.bird; const n=4, h=dt/n; KO.flyT+=dt;
+      for(let i=0;i<n;i++){ b.vy+=G*h; b.x+=b.vx*h; b.y+=b.vy*h;
+        if(b.y+R>GROUND){ b.y=GROUND-R; b.vy=-b.vy*0.35; b.vx*=0.8; if(Math.abs(b.vy)<40) b.vy=0; }
+        if(!KO.spent) for(const c of KO.crates){ if(!c.alive||KO.hitSet.has(c)) continue; const cx=Math.max(c.x,Math.min(b.x,c.x+c.w)), cy=Math.max(c.y,Math.min(b.y,c.y+c.h)); const dx=b.x-cx, dy=b.y-cy; if(dx*dx+dy*dy<R*R){ hitCrate(c,dx,dy); } } }
+      const slow=Math.hypot(b.vx,b.vy)<30&&b.y>=GROUND-R-1; if(b.x>LW+40||b.x<-40||slow||KO.flyT>6) endShot(); }
+    // crate gravity (settle by column)
+    for(let c=0;c<COLX.length;c++){ const col=KO.crates.filter(k=>k.col===c&&k.alive).sort((a,b)=>b.y-a.y); col.forEach((k,idx)=>{ const target=GROUND-CH*(idx+1); if(k.y<target){ k.vy+=G*dt; k.y=Math.min(target,k.y+k.vy*dt); if(k.y>=target){ k.vy=0; blip('land'); } } }); }
+    for(const c of KO.crates){ if(c.flash>0) c.flash-=dt; if(c.shake>0) c.shake-=dt; }
+    KO.fx=KO.fx.filter(f=>f.life>0); for(const f of KO.fx){ f.life-=dt*1.2; f.vy+=700*dt; f.x+=f.vx*dt; f.y+=f.vy*dt; f.r+=f.vr*dt; } }
+
+  function hitCrate(c,dx,dy){ const b=KO.bird; KO.hitSet.add(c); KO.spent=true;
+    if(c.st.f){ c.alive=false; KO.score+=100; KO.left--; blip('ok'); shatter(c); markItem(c.n-1,'false-hit','✓ Knocked out — '+c.st.why); b.vx*=0.3; b.vy=Math.min(b.vy,0)*0.3-60; hud(); toast('✓ False — knocked out','good'); }
+    else { KO.hearts--; c.flash=0.6; c.shake=0.4; blip('hit'); markItem(c.n-1,'true-hit','✗ That one is true — it should stay standing'); hud(); toast('✗ That statement is TRUE','bad');
+      const d=Math.hypot(dx,dy)||1, nx=dx/d, ny=dy/d; const dot=b.vx*nx+b.vy*ny; b.vx=(b.vx-2*dot*nx)*0.45; b.vy=(b.vy-2*dot*ny)*0.45; b.x+=nx*(R+2); b.y+=ny*(R+2); } }
+  function shatter(c){ for(let i=0;i<16;i++) KO.fx.push({x:c.x+Math.random()*c.w,y:c.y+Math.random()*c.h,vx:(Math.random()-.5)*360,vy:-Math.random()*260,life:1,r:Math.random()*6,vr:(Math.random()-.5)*8,s:6+Math.random()*8,col:Math.random()<.5?'#FBF7EE':'#C9A227'}); }
+
+  function endShot(){ if(KO.done) return; if(KO.left<=0){ win(); return; } if(KO.hearts<=0){ fail('Out of lives'); return; } if(KO.shots<=0){ fail('Out of shots'); return; } resetBird(); }
+  function win(){ KO.done=true; KO.state='done'; bumpPlayed(); const bonus=KO.shots*50+KO.hearts*30; KO.score+=bonus; const prev=S.knock.done[KO.round.id]; S.knock.done[KO.round.id]={score:Math.max(KO.score,prev?prev.score:0)}; save(); hud(); blip('win'); confetti();
+    const xp=Math.min(160,Math.round(KO.score/4)); setTimeout(()=>addXP(xp,'Knock-out'),300);
+    const next=COURSE.knockout.filter(inPaper).find(r=>!S.knock.done[r.id]);
+    setTimeout(()=>modal({title:'Tower cleared', html:`<div class="kv"><span>Score</span><b>${KO.score}</b><span>Bonus</span><b>+${bonus} (${KO.shots} shot${KO.shots===1?'':'s'} spare, ${KO.hearts} ${KO.hearts===1?'life':'lives'} left)</b></div><div class="why">Every false statement you hit is a misattribution or a reversal an examiner looks for. Read the corrections in green below before you move on.</div>`,
+      acts:[{label:'All rounds',ghost:true,fn:backToList}, next?{label:'Next round ▶',gold:true,fn:()=>startRound(next)}:{label:'Back to arcade',fn:()=>go('hub')}]}),700); }
+  function fail(reason){ KO.done=true; KO.state='done'; bumpPlayed(); save(); blip('lose'); KO.order.forEach((st,k)=>{ const c=KO.crates.find(x=>x.n===k+1); if(st.f&&c.alive) markItem(k,'reveal','This one was false — '+st.why); });
+    setTimeout(()=>modal({title:reason, html:`<div>${KO.left} false statement${KO.left===1?'':'s'} still standing. They are marked in gold below with the correction — read them, then try the tower again.</div>`, acts:[{label:'All rounds',ghost:true,fn:backToList},{label:'Try again',gold:true,fn:()=>startRound(KO.round)}]}),500); }
+  function backToList(){ KO.running=false; cancelAnimationFrame(KO.raf); $('#ko-game').hidden=true; $('#ko-pick').hidden=false; renderList(); }
+
+  // ---- draw ----
+  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function draw(){ ctx.clearRect(0,0,LW,LH);
+    // hills + ground
+    ctx.fillStyle='#E3ECE4'; ctx.beginPath(); ctx.ellipse(220,GROUND+10,260,70,0,Math.PI,0); ctx.fill(); ctx.fillStyle='#D9E6DA'; ctx.beginPath(); ctx.ellipse(560,GROUND+14,300,60,0,Math.PI,0); ctx.fill();
+    ctx.fillStyle='#CFC3A6'; ctx.fillRect(0,GROUND,LW,LH-GROUND); ctx.fillStyle='#8FA36B'; ctx.fillRect(0,GROUND,LW,6);
+    // slingshot
+    ctx.strokeStyle='#6B4A2B'; ctx.lineWidth=9; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(120,GROUND); ctx.lineTo(120,290); ctx.moveTo(120,292); ctx.lineTo(104,262); ctx.moveTo(120,292); ctx.lineTo(136,262); ctx.stroke();
+    const b=KO.bird; if(KO.state==='drag'||KO.state==='rest'){ ctx.strokeStyle='#3B2A1A'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(104,262); ctx.lineTo(b.x,b.y); ctx.moveTo(136,262); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    // trajectory preview
+    if(KO.state==='drag'){ let px=b.x,py=b.y,vx=(ANCHOR.x-b.x)*K,vy=(ANCHOR.y-b.y)*K; ctx.fillStyle='rgba(18,41,77,.35)'; for(let i=0;i<22;i++){ vy+=G*0.045; px+=vx*0.045; py+=vy*0.045; if(py>GROUND) break; ctx.beginPath(); ctx.arc(px,py,3,0,6.28); ctx.fill(); } }
+    // crates
+    for(const c of KO.crates){ if(!c.alive) continue; const sx=c.shake>0?Math.sin(c.shake*60)*3:0; ctx.fillStyle=c.flash>0?'#F3C7C4':'#FBF7EE'; ctx.strokeStyle=c.flash>0?'#B0413E':'#12294D'; ctx.lineWidth=2; roundRect(c.x+sx,c.y,c.w,c.h,6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#12294D'; ctx.beginPath(); ctx.arc(c.x+sx+18,c.y+c.h/2,13,0,6.28); ctx.fill(); ctx.fillStyle='#fff'; ctx.font=font('700',15); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(c.n,c.x+sx+18,c.y+c.h/2+1);
+      ctx.fillStyle='#16213A'; ctx.font=font('700',11); ctx.textAlign='left'; const words=c.st.s.replace(/[.]+$/,'').split(' '); let line1='',line2='',full=false; for(const w of words){ if(!line2&&ctx.measureText((line1+' '+w).trim()).width<c.w-42) line1=(line1+' '+w).trim(); else if(ctx.measureText((line2+' '+w+'…').trim()).width<c.w-42) line2=(line2+' '+w).trim(); else { full=true; break; } } if(full) line2=line2+'…';
+      ctx.fillText(line1,c.x+sx+36,c.y+c.h/2-(line2?7:0)); if(line2) ctx.fillText(line2,c.x+sx+36,c.y+c.h/2+7); }
+    // shards
+    for(const f of KO.fx){ ctx.save(); ctx.globalAlpha=Math.max(0,f.life); ctx.translate(f.x,f.y); ctx.rotate(f.r); ctx.fillStyle=f.col; ctx.strokeStyle='#12294D'; ctx.lineWidth=1; ctx.fillRect(-f.s/2,-f.s/2,f.s,f.s); ctx.strokeRect(-f.s/2,-f.s/2,f.s,f.s); ctx.restore(); }
+    // bird
+    if(KO.state!=='done'){ ctx.fillStyle='#E4C25A'; ctx.strokeStyle='#12294D'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(b.x,b.y,R,0,6.28); ctx.fill(); ctx.stroke(); ctx.fillStyle='#12294D'; ctx.beginPath(); ctx.arc(b.x+4,b.y-3,2.4,0,6.28); ctx.arc(b.x-3,b.y-3,2.4,0,6.28); ctx.fill(); ctx.lineWidth=1.8; ctx.beginPath(); ctx.arc(b.x+1,b.y+3,4,0.15*Math.PI,0.85*Math.PI); ctx.stroke(); }
+    // prompt
+    if(KO.state==='rest'&&!KO.done){ ctx.fillStyle='rgba(18,41,77,.6)'; ctx.font=font('700',13); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText('← pull back and release',150,240); } }
+
+  $('#ko-retry').onclick=()=>{ blip('tap'); startRound(KO.round); };
+  window.addEventListener('resize',()=>{ if(current==='knock'&&!$('#ko-game').hidden){ fitCanvas(); draw(); } });
+  GAMES.knock={ _K:KO, enter(){ $('#ko-game').hidden=true; $('#ko-pick').hidden=false; renderList(); }, leave(){ KO.running=false; cancelAnimationFrame(KO.raf); } };
+})();
+
+</script>
+
+</body>
+</html>
