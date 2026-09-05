@@ -147,6 +147,13 @@ h2.section:after{content:"";flex:1;height:1px;background:var(--rule)}
 .arcade .games span{font-size:13px;padding:4px 11px;border-radius:999px;border:1px solid rgba(233,217,160,.4);background:rgba(255,255,255,.07);color:#F6F1E4;white-space:nowrap}
 .arcade .games span b{color:var(--gold-soft);font-weight:600}
 .arcade .go{font-size:15px;color:var(--navy);font-weight:600;background:var(--gold);border-radius:8px;padding:11px 18px;white-space:nowrap}
+.arcades{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;margin:0 0 36px}
+.arcades .arcade{grid-template-columns:1fr;align-items:start;margin:0;gap:14px}
+.arcades .arcade .go{justify-self:start}
+.arcade.a2{background:#123F4D}
+.arcade.a2:before{background:#5FD3BE}
+.arcade.a2 .yr{color:#9BE7D8}
+.arcade.a2 .go{background:#5FD3BE;color:#0B2F3A}
 @media(max-width:640px){.arcade{grid-template-columns:1fr}.arcade .go{justify-self:start}}
 
 /* ---------- in-page unit viewer ---------- */
@@ -480,7 +487,7 @@ function renderHome(){
 
   var n=0; allUnits().forEach(function(){ n++; });
   var stats = el("div","stats");
-  [[2,"years"],[6,"strands"],[n,"units"],[4,"revision games"]].forEach(function(p){
+  [[2,"years"],[6,"strands"],[n,"units"],[2,"arcades"]].forEach(function(p){
     var st=el("div","stat"); st.appendChild(el("b",null,String(p[0]))); st.appendChild(el("span",null,p[1])); stats.appendChild(st);
   });
   view.appendChild(stats);
@@ -503,30 +510,55 @@ function renderHome(){
   view.appendChild(years);
 
   view.appendChild(el("h2","section","Revise with the arcade"));
-  view.appendChild(arcadeCard());
+  view.appendChild(arcadeCards());
 }
 
-/* ---- arcade card (home + search) ---- */
-function arcadeCard(){
-  var c = el("button","arcade"); c.type="button";
+/* ---- the two arcades ---- */
+var ARCADES = [
+ { id:"alevel", file:"arcade.html", cls:"",
+   kicker:"Philosophers' Arcade \u00b7 A-level, AQA 7062",
+   title:"Philosophy, Ethics and Christianity",
+   blurb:"Every term, scholar and argument from the 25 units above \u2014 Paley and Hume, agape and eudaimonia, Hampson and Ruether.",
+   games:["Key Term","Sort Sixteen","Concept Drop","Knock-out"] },
+ { id:"gcse", file:"arcade-gcse.html", cls:"a2",
+   kicker:"Believers' Arcade \u00b7 GCSE, Edexcel B",
+   title:"Christianity and Islam at GCSE",
+   blurb:"All eight GCSE units \u2014 Paper 1 Christianity and Paper 2 Islam \u2014 for Year 10 and Year 11, and for teaching lower down.",
+   games:["Key Term","Sort Sixteen","Concept Drop","Knock-out"] }
+];
+function findArcade(id){ for(var i=0;i<ARCADES.length;i++) if(ARCADES[i].id===id) return ARCADES[i]; return null; }
+
+/* ---- arcade cards (home + search) ---- */
+function arcadeCards(){
+  var g = el("div","arcades");
+  ARCADES.forEach(function(a){ g.appendChild(arcadeCard(a)); });
+  return g;
+}
+function arcadeCard(a){
+  var c = el("button","arcade" + (a.cls ? " "+a.cls : "")); c.type="button";
   var left = el("div");
-  left.appendChild(el("div","yr","Philosophers' Arcade · key concepts as games"));
-  left.appendChild(el("h3",null,"Four revision games, one course"));
-  left.appendChild(el("p","sub","Every term, scholar and argument comes from the units above. Play for five minutes; the arcade keeps your score and streak on this device."));
+  left.appendChild(el("div","yr", a.kicker));
+  left.appendChild(el("h3",null,a.title));
+  left.appendChild(el("p","sub", a.blurb));
   var g = el("div","games");
-  [["Key Term","Wordle-style"],["Sort Sixteen","Connections-style"],["Concept Drop","Tetris-style"],["Knock-out","slingshot"]].forEach(function(p){
-    var sp = el("span"); sp.appendChild(el("b",null,p[0])); sp.appendChild(document.createTextNode(" · "+p[1])); g.appendChild(sp);
-  });
+  a.games.forEach(function(n){ var sp = el("span"); sp.appendChild(el("b",null,n)); g.appendChild(sp); });
   left.appendChild(g);
   c.appendChild(left);
   c.appendChild(el("div","go","Open the arcade →"));
-  c.onclick=function(){ go("#/arcade"); };
+  c.onclick=function(){ go("#/arcade/"+a.id); };
   return c;
 }
 
 /* ---- arcade viewer (opens inside this page, like a unit) ---- */
-function renderArcade(){
-  setCrumbs([{label:"Course home",hash:"/"},{label:"Philosophers' Arcade"}]);
+function renderArcadeIndex(){
+  leaveViewer();
+  setCrumbs([{label:"Course home",hash:"/"},{label:"The arcade"}]);
+  view.innerHTML="";
+  view.appendChild(el("p","lede","Two arcades, the same four games. The A-level one is built on the 25 units above; the GCSE one covers all eight Edexcel B units for Years 10 and 11."));
+  view.appendChild(arcadeCards());
+}
+function renderArcade(a){
+  setCrumbs([{label:"Course home",hash:"/"},{label:"The arcade",hash:"/arcade"},{label:a.title}]);
   document.body.classList.add("viewing");
   view.className = "wrap viewwrap";
   view.innerHTML="";
@@ -534,14 +566,17 @@ function renderArcade(){
   var back = el("button","back","← Course home"); back.type="button"; back.onclick=function(){ go("#/"); };
   bar.appendChild(back);
   var now = el("div");
-  now.appendChild(el("div","now","Philosophers' Arcade"));
-  now.appendChild(el("div","ctx","Key Term · Sort Sixteen · Concept Drop · Knock-out — built on the AQA key concepts"));
+  now.appendChild(el("div","now", a.kicker));
+  now.appendChild(el("div","ctx","Key Term · Sort Sixteen · Concept Drop · Knock-out"));
   bar.appendChild(now);
+  var other = ARCADES.filter(function(x){ return x.id!==a.id; })[0];
+  if(other){ var nav = el("div","nav"); var sw = el("button",null,"Switch to " + (other.id==="gcse" ? "GCSE" : "A-level") + " ›"); sw.type="button";
+    sw.onclick=function(){ go("#/arcade/"+other.id); }; nav.appendChild(sw); bar.appendChild(nav); }
   view.appendChild(bar);
   var note = el("div","loading","Opening the arcade…");
   view.appendChild(note);
   frame = document.createElement("iframe");
-  frame.id = "frame"; frame.title = "Philosophers' Arcade"; frame.src = "arcade.html";
+  frame.id = "frame"; frame.title = a.title; frame.src = a.file;
   frame.onload = function(){ if(note.parentNode) note.parentNode.removeChild(note); sizeFrame(); };
   view.appendChild(frame);
   window.scrollTo(0,0); sizeFrame(); setTimeout(sizeFrame,120);
@@ -646,7 +681,7 @@ function renderSearch(term){
   view.appendChild(el("p","lede", hits.length
       ? hits.length + (hits.length===1?" unit matches ":" units match ") + '"'+term+'".'
       : 'Nothing matches "'+term+'". Try a philosopher, a key word, or a unit name.'));
-  if(/arcade|game|wordle|quiz|revis|play/.test(t)) view.appendChild(arcadeCard());
+  if(/arcade|game|wordle|quiz|revis|play|gcse/.test(t)) view.appendChild(arcadeCards());
   var g = el("div","units");
   hits.forEach(function(x){ g.appendChild(unitCard(x.y,x.s,x.u,true)); });
   view.appendChild(g);
@@ -657,7 +692,11 @@ function route(){
   var h = (location.hash||"#/").replace(/^#\/?/,"");
   var parts = h.split("/").filter(Boolean);
   if(parts[0]==="search"){ renderSearch(decodeURIComponent(parts.slice(1).join("/"))); return; }
-  if(parts[0]==="arcade"){ renderArcade(); return; }
+  if(parts[0]==="arcade"){
+    var a = parts[1] ? findArcade(parts[1]) : null;
+    if(a) renderArcade(a); else renderArcadeIndex();
+    window.scrollTo(0,0); return;
+  }
   if(!parts.length){ if(qbox.value) qbox.value=""; renderHome(); window.scrollTo(0,0); return; }
   var y = findYear(parts[0]);
   if(!y){ renderHome(); return; }
